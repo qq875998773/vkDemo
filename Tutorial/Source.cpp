@@ -139,20 +139,20 @@ namespace std
 
 struct UniformBufferObject 
 {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    glm::mat4 model;  // 模型矩阵
+    glm::mat4 view;   // 摄像机矩阵
+    glm::mat4 proj;   // 世界矩阵
 };
 
 // 管线类
-class HelloTriangleApplication 
+class Application 
 {
 public:
     // 运行
     void run()
     {
         initWindow(); // 初始化窗体
-        initVulkan(); // 初始化vulkan
+        initVulkan(); // 初始化vulkan|渲染管线
         mainLoop(); // 循环
         cleanup(); //清除资源
     }
@@ -218,16 +218,17 @@ private:
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
+        // 创建窗体 设置尺寸和标题
         window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan Demo", nullptr, nullptr);
 
         glfwSetWindowUserPointer(window, this);
-        glfwSetWindowSizeCallback(window, HelloTriangleApplication::onWindowResized);
+        glfwSetWindowSizeCallback(window, Application::onWindowResized);
     }
 
-    // 初始化vulkan
+    // 初始化vulkan|渲染管线
     void initVulkan() 
     {
-        createInstance();
+        createInstance(); //创建实例
         setupDebugCallback();
         createSurface();
         pickPhysicalDevice();
@@ -253,6 +254,7 @@ private:
         createSemaphores();
     }
 
+    // 主窗体循环
     void mainLoop()
     {
         while (!glfwWindowShouldClose(window)) 
@@ -332,7 +334,7 @@ private:
     {
         if (width == 0 || height == 0) return;
 
-        HelloTriangleApplication * app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+        Application * app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain();
     }
 
@@ -351,6 +353,7 @@ private:
         createCommandBuffers();
     }
 
+    // 创建vk实例
     void createInstance() 
     {
         if (enableValidationLayers && !checkValidationLayerSupport())
@@ -358,6 +361,7 @@ private:
             throw std::runtime_error("validation layers requested, but not available!");
         }
 
+        // 初始化运行时
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Hello Triangle";
@@ -366,10 +370,12 @@ private:
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_0;
 
+        // 生成实例初始化
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
+        createInfo.pApplicationInfo = &appInfo; // 把运行时赋给实例
 
+        // 
         auto extensions = getRequiredExtensions();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
@@ -1399,11 +1405,11 @@ private:
 
     void updateUniformBuffer()
     {
+        // 时间控制旋转
         static auto startTime = std::chrono::high_resolution_clock::now();
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 3000.0f;
-        //float time = 0.0f;
 
         UniformBufferObject ubo = {};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -1736,9 +1742,10 @@ private:
     }
 };
 
+// 主函数
 int main()
 {
-    HelloTriangleApplication app;
+    Application app;
 
     try
     {
