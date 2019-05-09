@@ -64,6 +64,7 @@ void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT
     }
 }
 
+
 struct QueueFamilyIndices 
 {
     int graphicsFamily = -1;
@@ -231,7 +232,7 @@ private:
         createInstance(); //创建实例
         setupDebugCallback();
         createSurface();
-        pickPhysicalDevice();
+        pickPhysicalDevice(); // 选择显卡
         createLogicalDevice();
         createSwapChain();
         createImageViews();
@@ -419,20 +420,29 @@ private:
         }
     }
 
+    // 选择显示设备
     void pickPhysicalDevice() 
     {
+        // 获取图形卡列表
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
-        if (deviceCount == 0) {
+        // 如果一个设备都没有 直接抛出异常
+        if (deviceCount == 0) 
+        {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
 
+        // 分配数组用来记录所有图形卡的句柄
         std::vector<VkPhysicalDevice> devices(deviceCount);
+        // 根据deviceCount图形卡个数给devices数组赋句柄值
         vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
+        // 遍历所有的图形卡
         for (const auto& device : devices) 
         {
+            // 如果这块卡符合要求 把这块卡句柄付给前面声明的句柄变量 跳出循环
+            // 这里就是找第一块符合要求的卡以这个卡为计算设备
             if (isDeviceSuitable(device))
             {
                 physicalDevice = device;
@@ -440,12 +450,15 @@ private:
             }
         }
 
-        if (physicalDevice == VK_NULL_HANDLE) {
+        // 如果这个声明的图形卡没有被赋值 抛异常
+        if (physicalDevice == VK_NULL_HANDLE) 
+        {
             throw std::runtime_error("failed to find a suitable GPU!");
         }
     }
 
-    void createLogicalDevice() {
+    void createLogicalDevice() 
+    {
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -552,7 +565,8 @@ private:
         swapChainExtent = extent;
     }
 
-    void createImageViews() {
+    void createImageViews()
+    {
         swapChainImageViews.resize(swapChainImages.size());
 
         for (uint32_t i = 0; i < swapChainImages.size(); i++) 
@@ -1589,6 +1603,7 @@ private:
         return details;
     }
 
+    // 检查这个显卡是否适合要执行的操作
     bool isDeviceSuitable(VkPhysicalDevice device)
     {
         QueueFamilyIndices indices = findQueueFamilies(device);
