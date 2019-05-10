@@ -34,6 +34,7 @@ const std::string TEXTURE_PATH = "textures/chalet.jpg"; // 纹理图片路径
 // 异常处理层
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 
+// 将渲染图像提交到屏幕的基本机制，这种机制称为交换链。
 const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 #ifdef NDEBUG
@@ -64,8 +65,9 @@ void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT
     }
 }
 
-
-struct QueueFamilyIndices 
+// 返回满足某个属性的队列簇索引。定义结构体，其中索引-1表示"未找到"
+// 支持graphics命令的的队列簇和支持presentation命令的队列簇可能不是同一个簇
+struct QueueFamilyIndices
 {
     int graphicsFamily = -1;
     int presentFamily = -1;
@@ -76,6 +78,7 @@ struct QueueFamilyIndices
     }
 };
 
+// 
 struct SwapChainSupportDetails
 {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -154,8 +157,8 @@ public:
     {
         initWindow(); // 初始化窗体
         initVulkan(); // 初始化vulkan|渲染管线
-        mainLoop(); // 循环
-        cleanup(); //清除资源
+        mainLoop();   // 循环
+        cleanup();    // 清除资源
     }
 
 private:
@@ -163,13 +166,19 @@ private:
 
     VkInstance instance; // vk实例
     VkDebugReportCallbackEXT callback; // debug异常检测
-    VkSurfaceKHR surface;
+    /*
+     需要在instance创建之后立即创建窗体surface
+     因为它会影响物理设备的选择。
+     窗体surface本身对于Vulkan也是非强制的。
+     Vulkan允许这样做，不需要同OpenGL一样必须要创建窗体surface
+    */
+    VkSurfaceKHR surface; // surface就是Vulkan与窗体系统的连接桥梁
 
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // 显卡|硬件设备
-    VkDevice device;
+    VkDevice device; // 添加一个新的类成员来存储逻辑设备句柄
 
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
+    VkQueue graphicsQueue; // 绘图队列句柄
+    VkQueue presentQueue;  // 演示队列句柄
 
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -229,11 +238,11 @@ private:
     // 初始化vulkan|渲染管线
     void initVulkan() 
     {
-        createInstance(); //创建实例
+        createInstance();        // 创建实例
         setupDebugCallback();
-        createSurface();
-        pickPhysicalDevice(); // 选择显卡
-        createLogicalDevice();
+        createSurface();         // 窗体和vulkan实例连接
+        pickPhysicalDevice();    // 选择设备
+        createLogicalDevice();   // 创建逻辑设备
         createSwapChain();
         createImageViews();
         createRenderPass();
@@ -294,6 +303,7 @@ private:
         vkDestroySwapchainKHR(device, swapChain, nullptr);
     }
 
+    // 清除资源
     void cleanup()
     {
         cleanupSwapChain();
@@ -321,12 +331,12 @@ private:
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 
-        vkDestroyDevice(device, nullptr);
+        vkDestroyDevice(device, nullptr); // 清除逻辑设备资源
         DestroyDebugReportCallbackEXT(instance, callback, nullptr);
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-        vkDestroyInstance(instance, nullptr);
+        vkDestroySurfaceKHR(instance, surface, nullptr); // GLFW没有提供专用的函数销毁surface,可以简单的通过Vulkan原始的API
+        vkDestroyInstance(instance, nullptr); // 确保surface的清理是在instance销毁之前完成
 
-        glfwDestroyWindow(window);
+        glfwDestroyWindow(window); // 清除窗体资源
 
         glfwTerminate();
     }
@@ -412,6 +422,8 @@ private:
         }
     }
 
+    // GLFW没有使用结构体，而是选择非常直接的参数传递来调用函数
+    // vulkan和窗体的连接
     void createSurface() 
     {
         if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS)
@@ -457,16 +469,26 @@ private:
         }
     }
 
+    // 创建逻辑设备
     void createLogicalDevice() 
     {
+        /*
+        我们需要多个VkDeviceQueueCreateInfo结构来创建不同功能的队列。
+        一个优雅的方式是针对不同功能的队列簇创建一个set集合确保队列簇的唯一性
+        */
+
+        // 查找列队簇
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
+        // 列队创建初始化数组
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<int> uniqueQueueFamilies = { indices.graphicsFamily, indices.presentFamily };
 
-        float queuePriority = 1.0f;
+        // 遍历设备簇中所有的元素
+        float queuePriority = 1.0f;// Vulkan允许使用0.0到1.0之间的浮点数分配队列优先级来影响命令缓冲区执行的调用。即使只有一个队列也是必须的
         for (int queueFamily : uniqueQueueFamilies)
         {
+            // 创建设备列队初始化
             VkDeviceQueueCreateInfo queueCreateInfo = {};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily;
@@ -475,21 +497,25 @@ private:
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
+        // 明确的信息有关设备要使用的功能特性
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
 
+        // 使用上面的两个结构体，我们可以填充VkDeviceCreateInfo结构
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
+        // 把初始化的了对数组赋给创建初始化VkDeviceCreateInfo
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
+        // 把设备功能特性赋值给创建初始化VkDeviceCreateInfo
         createInfo.pEnabledFeatures = &deviceFeatures;
 
+        // 
         createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-        if (enableValidationLayers) 
+        if (enableValidationLayers)
         {
             createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
             createInfo.ppEnabledLayerNames = validationLayers.data();
@@ -504,7 +530,10 @@ private:
             throw std::runtime_error("failed to create logical device!");
         }
 
+        // 检测每个队列簇中队列的句柄。参数是逻辑设备，队列簇，队列索引和存储获取队列变量句柄的指针。
+        //因为我们只是从这个队列簇创建一个队列，所以需要使用索引0
         vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
+        // 
         vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
     }
 
@@ -866,11 +895,8 @@ private:
 
     VkFormat findDepthFormat() 
     {
-        return findSupportedFormat(
-            { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-        );
+        return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+                                    VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
     }
 
     bool hasStencilComponent(VkFormat format)
@@ -882,10 +908,10 @@ private:
     {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;
 
         if (!pixels)
-        {
+        { 
             throw std::runtime_error("failed to load texture image!");
         }
 
@@ -1116,15 +1142,15 @@ private:
 
                 vertex.pos = 
                 {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
+                    attrib.vertices[(uint64_t)3 * index.vertex_index + 0],
+                    attrib.vertices[(uint64_t)3 * index.vertex_index + 1],
+                    attrib.vertices[(uint64_t)3 * index.vertex_index + 2]
                 };
 
                 vertex.texCoord =
                 {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                    attrib.texcoords[(uint64_t)2 * index.texcoord_index + 0],
+                    1.0f - attrib.texcoords[(uint64_t)2 * index.texcoord_index + 1]
                 };
 
                 vertex.color = { 1.0f, 1.0f, 1.0f };
@@ -1606,6 +1632,7 @@ private:
     // 检查这个显卡是否适合要执行的操作
     bool isDeviceSuitable(VkPhysicalDevice device)
     {
+        // 查找设备列队簇(就是找到所有的显卡)
         QueueFamilyIndices indices = findQueueFamilies(device);
 
         bool extensionsSupported = checkDeviceExtensionSupport(device);
@@ -1617,7 +1644,9 @@ private:
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
+        // 判断显卡能够执行哪些操作supportedFeatures.samplerAnisotropy
         VkPhysicalDeviceFeatures supportedFeatures;
+        // 查询这个设备支持的功能
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
         return indices.isComplete() && extensionsSupported&& supportedFeatures.samplerAnisotropy;
@@ -1633,7 +1662,7 @@ private:
 
         std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
-        for (const auto& extension : availableExtensions) 
+        for (const auto& extension : availableExtensions)
         {
             requiredExtensions.erase(extension.extensionName);
         }
@@ -1641,30 +1670,39 @@ private:
         return requiredExtensions.empty();
     }
 
+    // 查找列队簇
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) 
     {
         QueueFamilyIndices indices;
 
+        // 获取一共有多少个显卡设备
         uint32_t queueFamilyCount = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
+        // 声明vector数组 用来记录显卡句柄
         std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        // 将每一个显卡句柄赋值给vector数组
         vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
+        // 获取有效列队数
         int i = 0;
         for (const auto& queueFamily : queueFamilies)
         {
+            // 查找具备graphics功能的队列簇
             if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
             {
                 indices.graphicsFamily = i;
             }
 
+            // 用于检查的核心代码是vkGetPhysicalDeviceSurfaceSupportKHR, 
+            // 它将物理设备、队列簇索引和surface作为参数。在VK_QUEUE_GRAPHICS_BIT相同的循环体中添加函数的调用
             VkBool32 presentSupport = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
 
+            // 查找具备presentation功能的队列簇
             if (queueFamily.queueCount > 0 && presentSupport)
             {
-                indices.presentFamily = i;
+                indices.presentFamily = i; // 存储presentation队列簇的索引
             }
 
             if (indices.isComplete())
@@ -1686,7 +1724,7 @@ private:
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-        for (unsigned int i = 0; i < glfwExtensionCount; i++) 
+        for (unsigned int i = 0; i < glfwExtensionCount; i++)
         {
             extensions.push_back(glfwExtensions[i]);
         }
