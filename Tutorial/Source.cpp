@@ -78,7 +78,9 @@ struct QueueFamilyIndices
     }
 };
 
-// 
+// 如果仅仅是为了测试交换链的有效性是远远不够的，因为它还不能很好的与窗体surface兼容。
+// 创建交换链同样也需要很多设置，所以我们需要了解一些有关设置的细节
+// 交换链结构体详细信息
 struct SwapChainSupportDetails
 {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -180,12 +182,12 @@ private:
     VkQueue graphicsQueue; // 绘图队列句柄
     VkQueue presentQueue;  // 演示队列句柄
 
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
+    VkSwapchainKHR swapChain; // 交换链对象
+    std::vector<VkImage> swapChainImages; // 交换链图像， 图像被交换链创建，也会在交换链销毁的同时自动清理，所以不需要添加清理代码
+    VkFormat swapChainImageFormat; // 交换链图像变换
+    VkExtent2D swapChainExtent; // 交换链扩展
+    std::vector<VkImageView> swapChainImageViews; // 保存图像视图的句柄集
+    std::vector<VkFramebuffer> swapChainFramebuffers;// 
 
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
@@ -243,8 +245,8 @@ private:
         createSurface();         // 窗体和vulkan实例连接
         pickPhysicalDevice();    // 选择设备
         createLogicalDevice();   // 创建逻辑设备
-        createSwapChain();
-        createImageViews();
+        createSwapChain();       // 交换链
+        createImageViews();      // 创建图像视图
         createRenderPass();
         createDescriptorSetLayout();
         createGraphicsPipeline();
@@ -295,18 +297,19 @@ private:
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         vkDestroyRenderPass(device, renderPass, nullptr);
 
+        // 图像视图需要明确的创建过程，所以在程序退出的时候，需要添加一个循环去销毁
         for (size_t i = 0; i < swapChainImageViews.size(); i++)
         {
             vkDestroyImageView(device, swapChainImageViews[i], nullptr);
         }
 
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
+        vkDestroySwapchainKHR(device, swapChain, nullptr);// 在清理设备前销毁交换链
     }
 
     // 清除资源
     void cleanup()
     {
-        cleanupSwapChain();
+        cleanupSwapChain(); // 清除交换链
 
         vkDestroySampler(device, textureSampler, nullptr);
         vkDestroyImageView(device, textureImageView, nullptr);
@@ -537,55 +540,86 @@ private:
         vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
     }
 
+    // 创建交换链
+    // 将渲染图像提交到屏幕的基本机制称作交换链
     void createSwapChain() 
     {
+        // 获取交换链结构体详细信息
         SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
 
+        // 每个VkSurfaceFormatKHR结构都包含一个format和一个colorSpace成员。
+        // format成员变量指定色彩通道和类型。
+        // 比如，VK_FORMAT_B8G8R8A8_UNORM代表了我们使用B,G,R和alpha次序的通道，且每一个通道为无符号8bit整数，每个像素总计32bits。
+        // colorSpace成员描述SRGB颜色空间是否通过VK_COLOR_SPACE_SRGB_NONLINEAR_KHR标志支持。
+        // 需要注意的是在较早版本的规范中，这个标志名为VK_COLORSPACE_SRGB_NONLINEAR_KHR。
+        // 如果可以我们尽可能使用SRGB(彩色语言协议)，因为它会得到更容易感知的、精确的色彩。
+        // 直接与SRGB颜色打交道是比较有挑战的，所以我们使用标准的RGB作为颜色格式，这也是通常使用的一个格式VK_FORMAT_B8G8R8A8_UNORM。
+
+        // 设置surface格式。传递formats作为函数的参数，类型为SwapChainSupportDetails
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
+        // presentation模式对于交换链非常重要，它代表了在屏幕呈现图像的条件
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
+        // 交换链中的图像数量，可以理解为队列的长度。它指定运行时图像的最小数量，尝试大于1的图像数量，以实现三重缓冲
+        // maxImageCount数值为0代表除了内存之外没有限制，这就是为什么需要检查
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
         if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
         {
             imageCount = swapChainSupport.capabilities.maxImageCount;
         }
 
+        // 与Vulkan其他对象的创建过程一样，创建交换链也需要填充大量的结构体
         VkSwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
         createInfo.surface = surface;
 
+        // 交换链绑定到具体的surface之后，需要指定交换链图像有关的详细信息
         createInfo.minImageCount = imageCount;
         createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
         createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
+        createInfo.imageArrayLayers = 1; // imageArrayLayers指定每个图像组成的层数。除非我们开发3D应用程序，否则始终为1
+        // imageUsage位字段指定在交换链中对图像进行的具体操作
+        // 直接对它们进行渲染，这意味着它们作为颜色附件。也可以首先将图像渲染为单独的图像，进行后处理操作。
+        // 在这种情况下可以使用像VK_IMAGE_USAGE_TRANSFER_DST_BIT这样的值，并使用内存操作将渲染的图像传输到交换链图像队列。
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+        // 
         QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
         uint32_t queueFamilyIndices[] = { (uint32_t)indices.graphicsFamily, (uint32_t)indices.presentFamily };
 
         if (indices.graphicsFamily != indices.presentFamily)
         {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT; // 图像可以被多个队列簇访问，不需要明确所有权从属关系
             createInfo.queueFamilyIndexCount = 2;
             createInfo.pQueueFamilyIndices = queueFamilyIndices;
         }
         else
         {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;// 同一时间图像只能被一个队列簇占用，如果其他队列簇需要其所有权需要明确指定。这种方式提供了最好的性能
         }
 
+        // 如果交换链支持(supportedTransforms in capabilities),我们可以为交换链图像指定某些转换逻辑
+        // 比如90度顺时针旋转或者水平反转。如果不需要任何transoform操作，可以简单的设置为currentTransoform
+
+        // 当前变换赋值给preTransform
         createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
+        // 混合Alpha字段指定alpha通道是否应用与与其他的窗体系统进行混合操作。如果忽略该功能，简单的填VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR
         createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        // presentMode指向自己。如果clipped成员设置为VK_TRUE，意味着不关心被遮蔽的像素数据，
+        // 比如由于其他的窗体置于前方时或者渲染的部分内容存在于可是区域之外，除非真的需要读取这些像素获数据进行处理，否则可以开启裁剪获得最佳性能。
         createInfo.presentMode = presentMode;
         createInfo.clipped = VK_TRUE;
 
+        // 创建交换链
         if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create swap chain!");
         }
 
+        // 需要注意的是，之前创建交换链步骤中传递了期望的图像大小到字段minImageCount。
+        // 而实际的运行，允许创建更多的图像数量，这就解释了为什么需要再一次获取数量
         vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
         swapChainImages.resize(imageCount);
         vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
@@ -594,16 +628,20 @@ private:
         swapChainExtent = extent;
     }
 
+    // 创建图像视图
     void createImageViews()
     {
+        // 保存图像视图集合的大小
         swapChainImageViews.resize(swapChainImages.size());
 
-        for (uint32_t i = 0; i < swapChainImages.size(); i++) 
+        // 循环迭代所有的交换链图像
+        for (uint32_t i = 0; i < swapChainImages.size(); i++)
         {
             swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
+    // 
     void createRenderPass() 
     {
         VkAttachmentDescription colorAttachment = {};
@@ -964,19 +1002,24 @@ private:
         }
     }
 
+    // 创建图像视图
     VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
     {
+        // 创建图像视图初始化结构
         VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;// 用于描述图像数据该被如何解释
         viewInfo.format = format;
+        // subresourceRange用于描述图像的使用目标是什么，以及可以被访问的有效区域。图像将会作为color targets，没有任何mipmapping levels 或是多层 multiple layers
+        // 如果在编写沉浸式的3D应用程序，比如VR，就需要创建支持多层的交换链。并且通过不同的层为每一个图像创建多个视图，以满足不同层的图像在左右眼渲染时对视图的需要
         viewInfo.subresourceRange.aspectMask = aspectFlags;
         viewInfo.subresourceRange.baseMipLevel = 0;
         viewInfo.subresourceRange.levelCount = 1;
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
 
+        // 创建图像视图
         VkImageView imageView;
         if (vkCreateImageView(device, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
         {
@@ -1443,8 +1486,15 @@ private:
         }
     }
 
+    
     void updateUniformBuffer()
     {
+        // 鼠标操作
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos); // 获取当前鼠标位置
+
+
+
         // 时间控制旋转
         static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -1541,14 +1591,19 @@ private:
 
         return shaderModule;
     }
-
+    
+    // 设置sufface格式
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> & availableFormats) 
     {
+        // 最理想的情况是surface没有设置任何偏向性的格式，
+        // 这个时候Vulkan会通过仅返回一个VkSurfaceFormatKHR结构表示，
+        // 且该结构的format成员设置为VK_FORMAT_UNDEFINED。
         if (availableFormats.size() == 1 && availableFormats[0].format == VK_FORMAT_UNDEFINED) 
         {
             return{ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR };
         }
 
+        // 如果不能自由的设置格式，那么可以通过遍历列表设置具有偏向性的组合
         for (const auto& availableFormat : availableFormats) {
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
             {
@@ -1559,10 +1614,24 @@ private:
         return availableFormats[0];
     }
 
+    // 查询最合适的PresentMode类型
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
     {
+        /*
+        VK_PRESENT_MODE_IMMEDIATE_KHR: 应用程序提交的图像被立即传输到屏幕呈现，这种模式可能会造成撕裂效果。
+        VK_PRESENT_MODE_FIFO_KHR: 交换链被看作一个队列，当显示内容需要刷新的时候，显示设备从队列的前面获取图像，并且程序将渲染完成的图像插入队列的后面。如果队列是满的程序会等待。
+           这种规模与视频游戏的垂直同步很类似。显示设备的刷新时刻被成为“垂直中断”。
+        VK_PRESENT_MODE_FIFO_RELAXED_KHR: 该模式与上一个模式略有不同的地方为，
+           如果应用程序存在延迟，即接受最后一个垂直同步信号时队列空了，将不会等待下一个垂直同步信号，而是将图像直接传送。这样做可能导致可见的撕裂效果。
+        VK_PRESENT_MODE_MAILBOX_KHR: 这是第二种模式的变种。当交换链队列满的时候，选择新的替换旧的图像，从而替代阻塞应用程序的情形。
+           这种模式通常用来实现三重缓冲区，与标准的垂直同步双缓冲相比，它可以有效避免延迟带来的撕裂效果。
+        */
+
+        // 逻辑上看仅仅VR_PRESENT_MODE_FIFO_KHR模式保证可用性
         VkPresentModeKHR bestMode = VK_PRESENT_MODE_FIFO_KHR;
 
+        // 三级缓冲是一个非常好的策略。它允许避免撕裂，同时仍然保持相对低的延迟，通过渲染尽可能新的图像，直到接受垂直同步信号
+        // 循环列表，检查它是否可用
         for (const auto& availablePresentMode : availablePresentModes) 
         {
             if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) 
@@ -1578,8 +1647,14 @@ private:
         return bestMode;
     }
 
+    // 交换范围 指交换链图像的分辨率
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR & capabilities) 
     {
+        // 分辨率的范围被定义在VkSurfaceCapabilitiesKHR结构体中
+        // Vulkan告诉我们通过设置currentExtent成员的width和height来匹配窗体的分辨率
+        // 一些窗体管理器允许不同的设置，意味着将currentExtent的width和height设置为特殊的数值表示:uint32_t的最大值。
+        // 在这种情况下，参考窗体minImageExtent和maxImageExtent选择最匹配的分辨率。
+
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
         {
             return capabilities.currentExtent;
@@ -1587,7 +1662,7 @@ private:
         else
         {
             int width, height;
-            glfwGetWindowSize(window, &width, &height);
+            glfwGetWindowSize(window, &width, &height);// 获取窗体的大小
 
             VkExtent2D actualExtent =
             {
@@ -1595,6 +1670,8 @@ private:
                 static_cast<uint32_t>(height)
             };
 
+            // max和min函数用于将width和height收敛在实际支持的minimum和maximum范围中
+            // 在<algorithm>头文件
             actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
             actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
@@ -1602,24 +1679,30 @@ private:
         }
     }
 
+    // 获取设备交换链信息
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device)
     {
         SwapChainSupportDetails details;
 
+        // 查询设备的Surface
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
+        // 获取format数量
         uint32_t formatCount;
         vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
 
+        // 将format句柄赋给formats数组
         if (formatCount != 0) 
         {
             details.formats.resize(formatCount);
             vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
         }
 
+        // 查询设备的present数量
         uint32_t presentModeCount;
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
 
+        // 将present句柄赋给presentModes数组
         if (presentModeCount != 0)
         {
             details.presentModes.resize(presentModeCount);
@@ -1635,8 +1718,10 @@ private:
         // 查找设备列队簇(就是找到所有的显卡)
         QueueFamilyIndices indices = findQueueFamilies(device);
 
+        // 额外的检查逻辑
         bool extensionsSupported = checkDeviceExtensionSupport(device);
 
+        // 验证交换链是否有足够的支持
         bool swapChainAdequate = false;
         if (extensionsSupported) 
         {
@@ -1649,24 +1734,29 @@ private:
         // 查询这个设备支持的功能
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-        return indices.isComplete() && extensionsSupported&& supportedFeatures.samplerAnisotropy;
+        // 尝试查询交换链的支持是在验证完扩展有效性之后进行
+        return indices.isComplete() && extensionsSupported && supportedFeatures.samplerAnisotropy;
     }
 
+    // 额外的检查逻辑
     bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     {
+        // 获取队列数量
         uint32_t extensionCount;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
+        // 为队列的每个设备句柄赋给数组
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
+        // 获取每一个设备名字
         std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
         for (const auto& extension : availableExtensions)
         {
             requiredExtensions.erase(extension.extensionName);
         }
 
+        // 如果设备名字列表不为空 则返回真
         return requiredExtensions.empty();
     }
 
