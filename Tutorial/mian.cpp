@@ -286,7 +286,7 @@ private:
         vkDestroyImage(device, depthImage, nullptr);
         vkFreeMemory(device, depthImageMemory, nullptr);
 
-        for (size_t i = 0; i < swapChainFramebuffers.size(); i++) 
+        for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
         {
             vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
         }
@@ -317,7 +317,7 @@ private:
         vkDestroyImage(device, textureImage, nullptr);
         vkFreeMemory(device, textureImageMemory, nullptr);
 
-        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr); 
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
         vkDestroyBuffer(device, uniformBuffer, nullptr);

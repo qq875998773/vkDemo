@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tutorial", "Tutorial\Tutorial.vcxproj", "{2D0465D1-968E-4302-B784-84F996E8854C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanRenderer", "Tutorial\VulkanRenderer.vcxproj", "{2D0465D1-968E-4302-B784-84F996E8854C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
