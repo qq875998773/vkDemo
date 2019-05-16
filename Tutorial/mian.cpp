@@ -730,56 +730,78 @@ private:
         }
     }
 
+    // 创建图形管线
     void createGraphicsPipeline() 
     {
+        // 加载顶点shader和片元shader
         auto vertShaderCode = readFile("shaders/vert.spv");
         auto fragShaderCode = readFile("shaders/frag.spv");
 
+        // 在将代码传递给渲染管线之前，我们必须将其封装到VkShaderModule对象中
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
 
+        // 将着色器模块分配到管线中的顶点着色器阶段
         VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT; // 状态
         vertShaderStageInfo.module = vertShaderModule;
         vertShaderStageInfo.pName = "main";
 
+        // 将着色器模块分配到管线中的片段着色器阶段
         VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
         fragShaderStageInfo.module = fragShaderModule;
         fragShaderStageInfo.pName = "main";
 
+        // 完成两个结构体的创建，并通过数组保存，这部分引用将会在实际的管线创建开始
         VkPipelineShaderStageCreateInfo shaderStages[] = { vertShaderStageInfo, fragShaderStageInfo };
 
+        // 描述顶点数据的格式，数据传递到vertex shader中
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
+        // 根据数据的间隙，确定数据是每个顶点或者是每个instance(instancing)
         auto bindingDescription = Vertex::getBindingDescription();
+        // 描述将要进行绑定及加载属性的顶点着色器中的相关属性类型
         auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
         vertexInputInfo.vertexBindingDescriptionCount = 1;
         vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // 指向结构体数组，用于进一步描述加载的顶点数据信息
+        vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // 指向结构体数组，用于进一步描述加载的顶点数据信息
 
+        // 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssembly.primitiveRestartEnable = VK_FALSE;
-
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // 图元的拓扑结构类型
+        /*
+        VK_PRIMITIVE_TOPOLOGY_POINT_LIST: 顶点到点
+        VK_PRIMITIVE_TOPOLOGY_LINE_LIST: 两点成线，顶点不共用
+        VK_PRIMITIVE_TOPOLOGY_LINE_STRIP: 两点成线，每个线段的结束顶点作为下一个线段的开始顶点
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST: 三点成面，顶点不共用
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP: 每个但教训的第二个、第三个顶点都作为下一个三角形的前两个顶点
+        */
+        // 顶点数据按照缓冲区中的序列作为索引，但是也可以通过element buffer缓冲区自行指定顶点数据的索引。通过复用顶点数据提升性能。
+        // 如果设置primitiveRestartEnable成员为VK_TRUE，可以通过0xFFFF或者0xFFFFFFFF作为特殊索引来分解线和三角形在_STRIP模式下的图元拓扑结构。
+        inputAssembly.primitiveRestartEnable = VK_FALSE;  // 是否启用顶点索重新开始图元
+        
+        // 描述framebuffer作为渲染输出结果目标区域
         VkViewport viewport = {};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
         viewport.width = (float)swapChainExtent.width;
         viewport.height = (float)swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
+        viewport.minDepth = 0.0f; // 指定framebuffer中深度的范围
+        viewport.maxDepth = 1.0f; // 指定framebuffer中深度的范围
 
+        // 需要将图像绘制到完整的帧缓冲区framebuffer中，所以定义裁剪矩形覆盖到整体图像
         VkRect2D scissor = {};
         scissor.offset = { 0, 0 };
         scissor.extent = swapChainExtent;
 
+        // 
         VkPipelineViewportStateCreateInfo viewportState = {};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
@@ -856,8 +878,8 @@ private:
             throw std::runtime_error("failed to create graphics pipeline!");
         }
 
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+        vkDestroyShaderModule(device, fragShaderModule, nullptr); // 清除frag shader module
+        vkDestroyShaderModule(device, vertShaderModule, nullptr); // 清除vert shader module
     }
 
     void createFramebuffers() 
@@ -1576,6 +1598,8 @@ private:
         vkQueueWaitIdle(presentQueue);
     }
 
+    // 在将代码传递给渲染管线之前，必须将其封装到VkShaderModule对象中
+    // 创建一个辅助函数createShaderModule实现该逻辑
     VkShaderModule createShaderModule(const std::vector<char> & code) 
     {
         VkShaderModuleCreateInfo createInfo = {};
@@ -1583,6 +1607,7 @@ private:
         createInfo.codeSize = code.size();
         createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
+        // 创建shaderModule
         VkShaderModule shaderModule;
         if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) 
         {
