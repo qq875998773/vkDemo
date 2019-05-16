@@ -294,7 +294,7 @@ private:
         vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr); // 销毁pipeline layout
         vkDestroyRenderPass(device, renderPass, nullptr);
 
         // 图像视图需要明确的创建过程，所以在程序退出的时候，需要添加一个循环去销毁
@@ -360,7 +360,7 @@ private:
 
         createSwapChain();
         createImageViews();
-        createRenderPass();
+        createRenderPass(); // 渲染通道
         createGraphicsPipeline();
         createDepthResources();
         createFramebuffers();
@@ -641,7 +641,7 @@ private:
         }
     }
 
-    // 
+    // 渲染通道
     void createRenderPass() 
     {
         VkAttachmentDescription colorAttachment = {};
@@ -801,7 +801,7 @@ private:
         scissor.offset = { 0, 0 };
         scissor.extent = swapChainExtent;
 
-        // 
+        // 视口声明
         VkPipelineViewportStateCreateInfo viewportState = {};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
@@ -809,21 +809,35 @@ private:
         viewportState.scissorCount = 1;
         viewportState.pScissors = &scissor;
 
+
+        // 光栅化通过顶点着色器及具体的几何算法将顶点进行塑形，并将图形传递到片段着色器进行着色工作
+        // 它也会执行深度测试depth testing、面裁切face culling和裁剪测试，它可以对输出的片元进行配置，决定是否输出整个图元拓扑或者是边框(线框渲染)
+
+        // 光栅化
         VkPipelineRasterizationStateCreateInfo rasterizer = {};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_FALSE;
+        rasterizer.depthClampEnable = VK_FALSE; // 超过远近裁剪面的片元会进行收敛，而不是丢弃它们。它在特殊的情况下比较有用，像阴影贴图。使用该功能需要得到GPU的支持
+        rasterizer.rasterizerDiscardEnable = VK_FALSE; // 设置为VK_TRUE，那么几何图元永远不会传递到光栅化阶段。这是基本的禁止任何输出到framebuffer帧缓冲区的方法
+        rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // polygonMode决定几何产生图片的内容
+        /*
+        VK_POLYGON_MODE_FILL: 多边形区域填充
+        VK_POLYGON_MODE_LINE: 多边形边缘线框绘制
+        VK_POLYGON_MODE_POINT: 多边形顶点作为描点绘制
+        */
+        rasterizer.lineWidth = 1.0f; //使用任何模式填充都需要开启GPU功能,lineWidth成员是直接填充的，根据片元的数量描述线的宽度。最大的线宽支持取决于硬件，任何大于1.0的线宽需要开启GPU的wideLines特性支持
+        rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // cullMode变量用于决定面裁剪的类型方式。可以禁止culling，裁剪front faces，cull back faces 或者全部
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // frontFace用于描述作为front-facing面的顶点的顺序，可以是顺时针也可以是逆时针
+        rasterizer.depthBiasEnable = VK_FALSE;  // 光栅化可以通过添加常量或者基于片元的斜率来更改深度值。一些时候对于阴影贴图是有用的，这里不使用，所以设置depthBiasEnable为VK_FALSE
 
+        // 它通过组合多个多边形的片段着色器结果，光栅化到同一个像素。这主要发生在边缘，这也是最引人注目的锯齿出现的地方。
+        // 如果只有一个多边形映射到像素是不需要多次运行片段着色器进行采样的，相比高分辨率来说，它会花费较低的开销。开启该功能需要GPU支持
+        // 多重采样-抗锯齿
         VkPipelineMultisampleStateCreateInfo multisampling = {};
         multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         multisampling.sampleShadingEnable = VK_FALSE;
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
+        // 深度缓冲区
         VkPipelineDepthStencilStateCreateInfo depthStencil = {};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = VK_TRUE;
@@ -832,13 +846,22 @@ private:
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.stencilTestEnable = VK_FALSE;
 
-        VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = VK_FALSE;
+        // 片段着色器输出具体的颜色，它需要与帧缓冲区framebuffer中已经存在的颜色进行混合。这个转换的过程成为混色
+        // 有两种方式:1.将old和new颜色进行混合产出一个最终的颜色 2.使用按位操作混合old和new颜色的值
+        // 有两个结构体用于配置颜色混合。第一个结构体VkPipelineColorBlendAttachmentState包括了每个附加到帧缓冲区的配置
+        // 第二个结构体VkPipelineColorBlendStateCreateInfo包含了全局混色的设置
 
+        // 混色
+        // 每个附加到帧缓冲区的配置
+        VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
+        colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;// 掩码会用确定帧缓冲区中具体哪个通道的颜色受到影响
+        colorBlendAttachment.blendEnable = VK_FALSE; // 如果blendEnable设置为VK_FALSE,那么从片段着色器输出的新颜色不会发生变化，否则两个混色操作会计算新的颜色。所得到的结果与colorWriteMask进行AND运算，以确定实际传递的通道
+        // blendEnable,大多数的情况下使用混色用于实现alpha blending，新的颜色与旧的颜色进行混合会基于它们的opacity透明通道。finalColor作为最终的输出
+
+        // 全局混色的设置 持有所有帧缓冲区的引用，它允许设置混合操作的常量，该常量可以作为后续计算的混合因子
         VkPipelineColorBlendStateCreateInfo colorBlending = {};
         colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOpEnable = VK_FALSE;// 使用第一种方式, 需要设置logicOpEnable为VK_TURE。二进制位操作在logicOp字段中指定。在第一种方式中会自动禁止，等同于为每一个附加的帧缓冲区framebuffer关闭混合操作
         colorBlending.logicOp = VK_LOGIC_OP_COPY;
         colorBlending.attachmentCount = 1;
         colorBlending.pAttachments = &colorBlendAttachment;
@@ -847,6 +870,11 @@ private:
         colorBlending.blendConstants[2] = 0.0f;
         colorBlending.blendConstants[3] = 0.0f;
 
+        // 可以在着色器中使用uniform，它是类似与动态状态变量的全局变量，可以在绘画时修改，可以更改着色器的行为而无需重新创建它们。
+        // 它们通常用于将变换矩阵传递到顶点着色器或者在片段着色器冲创建纹理采样器
+        // 这些uniform数值需要在管线创建过程中，通过VkPipelineLayout对象指定
+
+        // 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
