@@ -263,7 +263,7 @@ private:
         createDescriptorPool();
         createDescriptorSet();
         createCommandBuffers();
-        createSemaphores();
+        createSemaphores();         // 创建信号对象
     }
 
     // 主循环将图形绘制到屏幕
@@ -331,8 +331,8 @@ private:
         vkDestroyBuffer(device, vertexBuffer, nullptr);
         vkFreeMemory(device, vertexBufferMemory, nullptr);
 
-        vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
-        vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
+        vkDestroySemaphore(device, renderFinishedSemaphore, nullptr); // 清除渲染信号
+        vkDestroySemaphore(device, imageAvailableSemaphore, nullptr); // 清楚图像信号
 
         vkDestroyCommandPool(device, commandPool, nullptr);// 销毁命令缓冲区
 
@@ -691,12 +691,12 @@ private:
         如果将这些渲染操作分组到一个渲染通道中，通过Vulkan将通道中的渲染操作进行重排序，可以节省内存从而获得更好的性能
         */
 
-        // 渲染子通道附件1
+        // 渲染子通道附件1 颜色
         VkAttachmentReference colorAttachmentRef = {};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        // 渲染子通道附件2
+        // 渲染子通道附件2 深度
         VkAttachmentReference depthAttachmentRef = {};
         depthAttachmentRef.attachment = 1;
         depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
@@ -1602,15 +1602,17 @@ private:
         }
     }
 
+    // 创建信号量对象
     void createSemaphores() 
     {
+        // 在当前版本中 除了type不需要赋其他值
         VkSemaphoreCreateInfo semaphoreInfo = {};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
+        // 创建信号量对象
         if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
             vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS)
         {
-
             throw std::runtime_error("failed to create semaphores!");
         }
     }
@@ -1645,7 +1647,7 @@ private:
     // 绘制帧 从交换链获取图像，在帧缓冲区中使用作为附件的图像来执行命令缓冲区中的命令，将图像返还给交换链最终呈现
     void drawFrame()
     {
-        // 
+        // vkAcquireNextImageKHR前两个参数是我们希望获取到图像的逻辑设备和交换链。第三个参数指定获取有效图像的操作timeout，单位纳秒。我们使用64位无符号最大值禁止timeout。
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
