@@ -88,35 +88,43 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
+// 顶点数据
 struct Vertex
 {
-    glm::vec3 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
+    glm::vec3 pos; // 顶点xyz
+    glm::vec3 color; // 颜色rgb
+    glm::vec2 texCoord; // 
 
+    // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率。换句话说，它指定数据条目之间的间隔字节数以及是否每个顶点之后或者每个instance之后移动到下一个条目
     static VkVertexInputBindingDescription getBindingDescription()
     {
         VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;// 移动到每个顶点后的下一个数据条目
+        /*
+        inputRate参数可以具备一下值之一：
+            VK_VERTEX_INPUT_RATE_VERTEX: 移动到每个顶点后的下一个数据条目
+            VK_VERTEX_INPUT_RATE_INSTANCE: 在每个instance之后移动到下一个数据条目
+        */
 
         return bindingDescription;
     }
 
+    // 处理顶点的输入
     static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
     {
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
 
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+        attributeDescriptions[0].binding = 0; // binding参数告诉了Vulkan每个顶点数据的来源
+        attributeDescriptions[0].location = 0;// location参数引用了vertex shader作为输入的location指令。顶点着色器中，location为0代表position，它是32bit单精度数据
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;// format参数描述了属性的类型。该格式使用与颜色格式一样的枚举
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);// offset参数指定了每个顶点数据读取的字节宽度偏移量,绑定一次加载一个Vertex，position属性(pos)的偏移量在字节数据中为0字节。这是使用offsetof macro宏自动计算的
 
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
+        attributeDescriptions[1].binding = 0; // binding参数告诉了Vulkan每个顶点颜色数据的来源
+        attributeDescriptions[1].location = 1;// location参数引用了vertex shader作为输入的location指令。顶点着色器中，location为1代表color，它是32bit单精度数据
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;// format参数描述了属性的类型
+        attributeDescriptions[1].offset = offsetof(Vertex, color); // offset参数指定了每个颜色数据读取的字节宽度偏移量
 
         attributeDescriptions[2].binding = 0;
         attributeDescriptions[2].location = 2;
@@ -132,6 +140,7 @@ struct Vertex
     }
 };
 
+// 扩展std标准库
 namespace std 
 {
     template<> struct hash<Vertex> 
@@ -143,7 +152,8 @@ namespace std
     };
 }
 
-struct UniformBufferObject 
+// 着色器数据
+struct UniformBufferObject
 {
     glm::mat4 model;  // 模型矩阵
     glm::mat4 view;   // 摄像机矩阵
@@ -190,11 +200,11 @@ private:
     std::vector<VkFramebuffer> swapChainFramebuffers;// 交换链帧缓冲区集
 
     VkRenderPass renderPass; // 渲染通道
-    VkDescriptorSetLayout descriptorSetLayout; // 
+    VkDescriptorSetLayout descriptorSetLayout; //
     VkPipelineLayout pipelineLayout; // 管线布局
     VkPipeline graphicsPipeline; // 绘制管线
 
-    VkCommandPool commandPool; // 令缓冲区
+    VkCommandPool commandPool; //
 
     VkImage depthImage;
     VkDeviceMemory depthImageMemory;
@@ -205,20 +215,26 @@ private:
     VkImageView textureImageView;
     VkSampler textureSampler;
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
+    std::vector<Vertex> vertices; // 顶点集合
+    /*
+    推荐在单个内存中分配多个资源，如缓冲区，但是实际上，应该更进一步细化。来自Nvidia的驱动程序开发者建议将多个缓冲区(顶点缓冲区、索引缓冲区)存储到单个VkBuffer中
+    并在诸如vkCmdBindVertexBuffers之类的命令中使用偏移量
+    优点在于，在这种情况下，数据会更加充分的利用缓存，因为它们排列在一块区域。甚至在同一个渲染操作中可以复用来自相同内存块的多个资源块，只要刷新数据即可
+    该技巧称为称为aliasing，一些Vulkan函数有明确的标志指定这样做的意图
+    */
+    std::vector<uint32_t> indices;// 顶点索引集合
+    VkBuffer vertexBuffer;// 顶点缓冲区
+    VkDeviceMemory vertexBufferMemory;// 顶点缓冲区记录
+    VkBuffer indexBuffer; // 索引缓冲区
+    VkDeviceMemory indexBufferMemory; // 索引缓冲区记录
 
-    VkBuffer uniformBuffer;
+    VkBuffer uniformBuffer; // 
     VkDeviceMemory uniformBufferMemory;
 
     VkDescriptorPool descriptorPool;
     VkDescriptorSet descriptorSet;
 
-    std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkCommandBuffer> commandBuffers; // 命令缓冲区集
 
     VkSemaphore imageAvailableSemaphore; // 渲染开始信号
     VkSemaphore renderFinishedSemaphore; // 渲染结束信号
@@ -248,7 +264,7 @@ private:
         createSwapChain();          // 交换链
         createImageViews();         // 创建图像视图
         createRenderPass();         // 渲染通道
-        createDescriptorSetLayout();// 
+        createDescriptorSetLayout();// 创建描述符设置布局
         createGraphicsPipeline();   // 图形管线
         createCommandPool();        // 创建令缓冲区
         createDepthResources();     // 
@@ -257,12 +273,12 @@ private:
         createTextureImageView();
         createTextureSampler();
         loadModel();
-        createVertexBuffer();
-        createIndexBuffer();
+        createVertexBuffer();       // 创建顶点缓冲区
+        createIndexBuffer();        // 创建顶点索引缓冲区
         createUniformBuffer();
         createDescriptorPool();
         createDescriptorSet();
-        createCommandBuffers();
+        createCommandBuffers();     // 创建命令缓冲区
         createSemaphores();         // 创建信号对象
     }
 
@@ -273,7 +289,7 @@ private:
         {
             glfwPollEvents();
 
-            updateUniformBuffer();
+            updateUniformBuffer(); // 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转，移动，放缩等变换
             drawFrame(); // 绘制帧
         }
 
@@ -285,7 +301,7 @@ private:
     {
         vkDestroyImageView(device, depthImageView, nullptr);
         vkDestroyImage(device, depthImage, nullptr);
-        vkFreeMemory(device, depthImageMemory, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);// 
 
         // 删除帧缓冲区
         for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
@@ -293,6 +309,7 @@ private:
             vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
         }
 
+        // 清理用于传输命令的命令缓冲区
         vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr); // 清除图形管线
@@ -325,14 +342,14 @@ private:
         vkDestroyBuffer(device, uniformBuffer, nullptr);
         vkFreeMemory(device, uniformBufferMemory, nullptr);
 
-        vkDestroyBuffer(device, indexBuffer, nullptr);
-        vkFreeMemory(device, indexBufferMemory, nullptr);
+        vkDestroyBuffer(device, indexBuffer, nullptr); // 清除顶点索引缓冲区
+        vkFreeMemory(device, indexBufferMemory, nullptr);// 清除顶点索引缓冲区记录
 
-        vkDestroyBuffer(device, vertexBuffer, nullptr);
-        vkFreeMemory(device, vertexBufferMemory, nullptr);
+        vkDestroyBuffer(device, vertexBuffer, nullptr); // 清除顶点缓冲区
+        vkFreeMemory(device, vertexBufferMemory, nullptr);// 清除顶点缓冲区记录
 
         vkDestroySemaphore(device, renderFinishedSemaphore, nullptr); // 清除渲染信号
-        vkDestroySemaphore(device, imageAvailableSemaphore, nullptr); // 清楚图像信号
+        vkDestroySemaphore(device, imageAvailableSemaphore, nullptr); // 清除图像信号
 
         vkDestroyCommandPool(device, commandPool, nullptr);// 销毁命令缓冲区
 
@@ -346,27 +363,30 @@ private:
         glfwTerminate();
     }
 
+    // 窗口尺寸变化
     static void onWindowResized(GLFWwindow* window, int width, int height) 
     {
         if (width == 0 || height == 0) return;
 
         Application * app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-        app->recreateSwapChain();
+        app->recreateSwapChain(); // 重新创建交换链
     }
 
-    void recreateSwapChain() 
+    // 重新创建交换链
+    void recreateSwapChain()
     {
         vkDeviceWaitIdle(device);
 
+        // 清除交换链资源
         cleanupSwapChain();
 
-        createSwapChain();
-        createImageViews();
-        createRenderPass(); // 渲染通道
-        createGraphicsPipeline();
-        createDepthResources();
-        createFramebuffers();
-        createCommandBuffers();
+        createSwapChain(); // 创建交换链
+        createImageViews();// 创建图像视图
+        createRenderPass();// 创建渲染通道
+        createGraphicsPipeline();// 创建图像管线
+        createDepthResources(); // 创建信号资源
+        createFramebuffers(); // 创建帧缓冲区
+        createCommandBuffers(); // 创建命令缓冲区
     }
 
     // 创建vk实例
@@ -551,11 +571,11 @@ private:
 
         // 每个VkSurfaceFormatKHR结构都包含一个format和一个colorSpace成员。
         // format成员变量指定色彩通道和类型。
-        // 比如，VK_FORMAT_B8G8R8A8_UNORM代表了我们使用B,G,R和alpha次序的通道，且每一个通道为无符号8bit整数，每个像素总计32bits。
+        // 比如，VK_FORMAT_B8G8R8A8_UNORM代表了使用B,G,R和alpha次序的通道，且每一个通道为无符号8bit整数，每个像素总计32bits。
         // colorSpace成员描述SRGB颜色空间是否通过VK_COLOR_SPACE_SRGB_NONLINEAR_KHR标志支持。
         // 需要注意的是在较早版本的规范中，这个标志名为VK_COLORSPACE_SRGB_NONLINEAR_KHR。
-        // 如果可以我们尽可能使用SRGB(彩色语言协议)，因为它会得到更容易感知的、精确的色彩。
-        // 直接与SRGB颜色打交道是比较有挑战的，所以我们使用标准的RGB作为颜色格式，这也是通常使用的一个格式VK_FORMAT_B8G8R8A8_UNORM。
+        // 如果可以尽可能使用SRGB(彩色语言协议)，因为它会得到更容易感知的、精确的色彩。
+        // 直接与SRGB颜色打交道是比较有挑战的，所以使用标准的RGB作为颜色格式，这也是通常使用的一个格式VK_FORMAT_B8G8R8A8_UNORM。
 
         // 设置surface格式。传递formats作为函数的参数，类型为SwapChainSupportDetails
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -715,24 +735,24 @@ private:
             pPreserveAttachments: 附件不被子通道使用，但是数据被保存
         */
 
-        // 
+        // 描述子通道依赖关系
         VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // VK_SUBPASS_EXTERNAL是指在渲染通道之前或者之后的隐式子通道，取决于它是否在srcSubpass或者dstSubPass中指定
+        dependency.dstSubpass = 0; // 索引0指定我们的子通道，这是第一个也是唯一的,dstSubpass必须始终高于srcSubPass以防止依赖关系出现循环
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; // 指定要等待的操作和这些操作发生的阶段,在我们可以访问对象之前,我们需要等待交换链完成对应图像的读取操作,这可以通过等待颜色附件输出的阶段来实现
         dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;// 指定要等待的操作和这些操作发生的阶段
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;// 颜色附件阶段的操作及涉及颜色附件的读取和写入的操作应该等待
 
         std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.subpassCount = 1; // 指定渲染子通道数量
+        renderPassInfo.pSubpasses = &subpass; // 指定渲染子通道
+        renderPassInfo.dependencyCount = 1; // 指定依赖的数量
+        renderPassInfo.pDependencies = &dependency; // 指定依赖的数组
 
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) 
         {
@@ -740,14 +760,19 @@ private:
         }
     }
 
+    // 创建描述符设置布局
     void createDescriptorSetLayout() 
-    {
+    {// 需要在管线创建时，为着色器提供关于每个描述符绑定的详细信息，就像为每个顶点属性和location索引做的一样。
+     // 添加一个新的函数来定义所有这些名为createDescritorSetLayout的信息。考虑到会在管线中使用，它应该在管线创建函数之前调用
+
+        // 着色器数据结构布局绑定
         VkDescriptorSetLayoutBinding uboLayoutBinding = {};
         uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorCount = 1; // 
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.pImmutableSamplers = nullptr; // pImmutableSamplers字段仅仅与图像采样的描述符有关
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //  描述符在着色器哪个阶段被引用
+
 
         VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
         samplerLayoutBinding.binding = 1;
@@ -805,8 +830,8 @@ private:
         // 描述将要进行绑定及加载属性的顶点着色器中的相关属性类型
         auto attributeDescriptions = Vertex::getAttributeDescriptions();
 
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.vertexBindingDescriptionCount = 1; // 顶点绑定描述数量
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()); // 顶点属性描述数量
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // 指向结构体数组，用于进一步描述加载的顶点数据信息
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // 指向结构体数组，用于进一步描述加载的顶点数据信息
 
@@ -912,7 +937,7 @@ private:
         // 它们通常用于将变换矩阵传递到顶点着色器或者在片段着色器冲创建纹理采样器
         // 这些uniform数值需要在管线创建过程中，通过VkPipelineLayout对象指定
 
-        // 
+        // 需要在创建管线的时候指定描述符集合的布局，用以告知Vulkan着色器将要使用的描述符。描述符布局在管线布局对象中指定。修改VkPipelineLayoutCreateInfo引用布局对象
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
@@ -1162,6 +1187,9 @@ private:
         allocInfo.allocationSize = memRequirements.size;
         allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
+        // 在真实的生产环境中的应用程序里，不建议为每个缓冲区调用vkAllocateMemory分配内存
+        // 内存分配的最大数量受到maxMemoryAllocationCount物理设备所限，即使像NVIDIA GTX1080这样的高端硬件上，也只能提供4096的大小
+        // 同一时间，为大量对象分配内存的正确方法是创建一个自定义分配器，通过使用我们在许多函数中用到的偏移量offset，将一个大块的可分配内存区域划分为多个可分配内存块，提供缓冲区使用
         if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate image memory!");
@@ -1282,6 +1310,7 @@ private:
 
         for (const auto& shape : shapes) 
         {
+            // 给顶点索引加入编号&给顶点集合加入值&给纹理赋值
             for (const auto& index : shape.mesh.indices)
             {
                 Vertex vertex = {};
@@ -1307,34 +1336,39 @@ private:
                     vertices.push_back(vertex);
                 }
 
+                // 把这个顶点索引提交给顶点索引集合
                 indices.push_back(uniqueVertices[vertex]);
             }
         }
     }
 
+    // 创建顶点缓冲区
     void createVertexBuffer()
     {
+        // 计算缓冲区大小直接用sizeof
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
+        VkBuffer stagingBuffer; // 划分stagingBufferMemory缓冲区用来映射、拷贝顶点数据
+        VkDeviceMemory stagingBufferMemory; // 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data); // 内存映射
+        memcpy(data, vertices.data(), (size_t)bufferSize); // 拷贝数据
         vkUnmapMemory(device, stagingBufferMemory);
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
         copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(device, stagingBuffer, nullptr); // 清除顶点缓冲区
+        vkFreeMemory(device, stagingBufferMemory, nullptr);// 清除顶点缓冲区记录
     }
 
+    // 创建顶点索引缓冲区
     void createIndexBuffer()
     {
+        // 设置缓冲区大小直接用sizeof
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         VkBuffer stagingBuffer;
@@ -1350,10 +1384,11 @@ private:
 
         copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(device, stagingBuffer, nullptr); // 清除顶点索引缓冲区
+        vkFreeMemory(device, stagingBufferMemory, nullptr); // 清除顶点索引缓冲区记录
     }
 
+    // 创建清除缓冲区
     void createUniformBuffer() 
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -1425,33 +1460,45 @@ private:
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer & buffer, VkDeviceMemory & bufferMemory) 
+    // 创建缓冲区
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) 
     {
+        // 创建buffer初始化
         VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;// 类型
+        bufferInfo.size = size; // 指定缓冲区字节大小。计算缓冲区每个顶点数据的字节大小可以直接使用sizeof
+        bufferInfo.usage = usage;// 指定缓冲区的数据将如何使用。可以使用位操作指定多个使用目的
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;// 像交换链中的图像一样，缓冲区也可以由特定的队列簇占有或者多个同时共享。在本项目缓冲区将会被用于图形队列，所以使用独占访问模式exclusive mode
 
+        // 创建buffer
         if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create buffer!");
         }
 
+        // 给缓冲区分配内存
         VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+        vkGetBufferMemoryRequirements(device, buffer, &memRequirements);// 
 
+        // 分配内存
         VkMemoryAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+        allocInfo.allocationSize = memRequirements.size; // 大小
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties); // 分配内存编号
 
+        // 在真实的生产环境中的应用程序里，不建议为每个缓冲区调用vkAllocateMemory分配内存
+        // 内存分配的最大数量受到maxMemoryAllocationCount物理设备所限，即使像NVIDIA GTX1080这样的高端硬件上，也只能提供4096的大小
+        // 同一时间，为大量对象分配内存的正确方法是创建一个自定义分配器，通过使用我们在许多函数中用到的偏移量offset，将一个大块的可分配内存区域划分为多个可分配内存块，提供缓冲区使用
+        // 可以自己实现一个灵活的内存分配器，或者使用GOUOpen提供的VulkanMemoryAllocator库。然而，对于本项目，可以做到为每个资源使用单独的分配，因为不会触达任何资源限制条件.
+
+        // 如果内存分配成功，使用vkBindBufferMemory函数将内存关联到缓冲区
         if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to allocate buffer memory!");
         }
 
-        vkBindBufferMemory(device, buffer, bufferMemory, 0);
+        // 将内存关联到缓冲区
+        vkBindBufferMemory(device, buffer, bufferMemory, 0);// 第四个参数内存区域的偏移量,因为这个内存被专门为顶点缓冲区分配,偏移量设置为0.如果偏移量non-zero,那么需要通过memRequirements.alignment整除
     }
 
     // 命令缓冲区的记录功能
@@ -1492,35 +1539,42 @@ private:
     {
         vkEndCommandBuffer(commandBuffer);
 
+        // 队列提交和同步
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
+        submitInfo.commandBufferCount = 1; // 提交执行命令缓冲区的数量
+        submitInfo.pCommandBuffers = &commandBuffer; // 具体被提交执行的命令缓冲区
 
+        // 
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(graphicsQueue);
 
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
+    // 从一个缓冲区拷贝数据到另一个缓冲区
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
     {
+        // 命令缓冲区记录
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
         VkBufferCopy copyRegion = {};
         copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);// 拷贝缓冲区
 
         endSingleTimeCommands(commandBuffer);
     }
 
+    // 分配不同类型的内存  每种类型的内存根据所允许的操作和特性均不相同。需要结合缓冲区与应用程序实际的需要找到正确的内存类型使用
+    // typeFilter参数将以位的形式代表适合的内存类型
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) 
     {
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+        VkPhysicalDeviceMemoryProperties memProperties; // 有效的内存类型
+        vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties); // 遍历有效的内存类型
 
+        // 为缓冲区找到合适的内存类型
         for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-        {
+        {   // typeFilter参数将以位的形式代表适合的内存类型。这意味着通过简单的迭代内存属性集合，并根据需要的类型与每个内存属性的类型进行AND操作，判断是否为1
             if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) 
             {
                 return i;
@@ -1533,6 +1587,7 @@ private:
     // 创建命令缓冲区
     void createCommandBuffers() 
     {
+        // 为命令缓冲区集设置大小
         commandBuffers.resize(swapChainFramebuffers.size());
 
         VkCommandBufferAllocateInfo allocInfo = {};
@@ -1583,12 +1638,15 @@ private:
 
             VkBuffer vertexBuffers[] = { vertexBuffer };
             VkDeviceSize offsets[] = { 0 };
-            vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
+            vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);// 用于绑定顶点缓冲区，就像之前的设置一样，除了命令缓冲区之外，前两个参数指定了我们要为其指定的顶点缓冲区的偏移量和数量,后两个参数指定了将要绑定的顶点缓冲区的数组及开始读取数据的起始偏移量
 
-            vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32); // 绑定索引缓冲区
 
             vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
+            // 前两个参数指定索引的数量和几何instance数量。没有使用instancing，所以指定1。
+            // 索引数表示被传递到顶点缓冲区中的顶点数量。下一个参数指定索引缓冲区的偏移量，使用1将会导致图形卡在第二个索引处开始读取
+            // 倒数第二个参数指定索引缓冲区中添加的索引的偏移。最后一个参数指定instancing偏移量，我们没有使用该特性
             vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
             // 渲染通道执行完绘制，可以结束渲染作业
@@ -1617,7 +1675,7 @@ private:
         }
     }
 
-    
+    // 更新 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转，移动，放缩等变换
     void updateUniformBuffer()
     {
         // 鼠标操作
@@ -1635,9 +1693,11 @@ private:
         UniformBufferObject ubo = {};
         ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         ubo.view = glm::lookAt(glm::vec3(1.7f, 1.7f, 1.7f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // 摄像机位置/中心位置/上下仰角
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-        ubo.proj[1][1] *= -1;
+        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);// 选择使用FOV为45度的透视投影。其他参数是宽高比，近裁剪面和远裁剪面。重要的是使用当前的交换链扩展来计算宽高比，以便在窗体调整大小后参考最新的窗体宽度和高度
+        ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的，它的裁剪坐标的Y是反转的。修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转。如果不这样做图像会被倒置
 
+        // 现在定义了所有的变换，所以将UBO中的数据复制到uniform缓冲区。除了没有暂存缓冲区，这与顶点缓冲区的操作完全相同
+        // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式。相比传递一个更小的数据缓冲区到着色器中，更有效的方式是使用常量
         void* data;
         vkMapMemory(device, uniformBufferMemory, 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
@@ -1647,12 +1707,15 @@ private:
     // 绘制帧 从交换链获取图像，在帧缓冲区中使用作为附件的图像来执行命令缓冲区中的命令，将图像返还给交换链最终呈现
     void drawFrame()
     {
-        // vkAcquireNextImageKHR前两个参数是我们希望获取到图像的逻辑设备和交换链。第三个参数指定获取有效图像的操作timeout，单位纳秒。我们使用64位无符号最大值禁止timeout。
+        // vkAcquireNextImageKHR前两个参数是我们希望获取到图像的逻辑设备和交换链。第三个参数指定获取有效图像的操作timeout，单位纳秒。我们使用64位无符号最大值禁止timeout
+        // 后两个参数指定使用的同步对象，当presentation引擎完成了图像的呈现后会使用该对象发起信号,这就是开始绘制的时间点,它可以指定一个信号量semaphore或者栅栏或者两者,这里使用imageAvailableSemaphore
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) 
+        // 如果错误报告
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
+            // 重新创建交换链
             recreateSwapChain();
             return;
         }
@@ -1661,39 +1724,50 @@ private:
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
+        // 队列提交和同步
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
+        // 等待缓冲区信号集
         VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }; // 数组对应pWaitSemaphores中具有相同索引的信号
+        submitInfo.waitSemaphoreCount = 1; // 等待信号的数量
+        submitInfo.pWaitSemaphores = waitSemaphores; // 等待哪些具体信号
+        submitInfo.pWaitDstStageMask = waitStages; // 指定pWaitSemaphores中具有相同索引的信号
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+        submitInfo.commandBufferCount = 1; // 指定被执行的命令缓冲区信号数量
+        submitInfo.pCommandBuffers = &commandBuffers[imageIndex]; // 指定哪个命令缓冲区被实际提交执行
 
+        // 渲染结束信号集
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        submitInfo.signalSemaphoreCount = 1; // 指定被指定的命令缓冲区信号数量
+        submitInfo.pSignalSemaphores = signalSemaphores;// 指定具体被提交指定的命令缓冲区
 
+        // 向图像队列提交命令缓冲区
+        // 当开销负载比较大的时候，处于效率考虑，函数可以持有VkSubmitInfo结构体数组
+        // 最后一个参数引用了一个可选的栅栏，当命令缓冲区执行完毕时候它会被发送信号
+        // 我们使用信号量进行同步，所以我们需要传递VK_NULL_HANDLE
         if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 
+        // 将结果提交到交换链，使其最终显示在屏幕上
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
+        // 指定在进行presentation之前要等待的信号量，
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
 
+        // 
         VkSwapchainKHR swapChains[] = { swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
 
         presentInfo.pImageIndices = &imageIndex;
 
+        // 提交请求呈现交换链中的图像
         result = vkQueuePresentKHR(presentQueue, &presentInfo);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
