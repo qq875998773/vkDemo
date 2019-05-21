@@ -201,11 +201,11 @@ private:
     std::vector<VkFramebuffer> swapChainFramebuffers;// 交换链帧缓冲区集
 
     VkRenderPass renderPass; // 渲染通道
-    VkDescriptorSetLayout descriptorSetLayout; //
+    VkDescriptorSetLayout descriptorSetLayout; // 描述符集布局
     VkPipelineLayout pipelineLayout; // 管线布局
     VkPipeline graphicsPipeline; // 绘制管线
 
-    VkCommandPool commandPool; //
+    VkCommandPool commandPool; // 命令池
 
     VkImage depthImage; // 图像深度附件
     VkDeviceMemory depthImageMemory;// 图像深度附件记录
@@ -229,8 +229,8 @@ private:
     VkBuffer indexBuffer; // 索引缓冲区
     VkDeviceMemory indexBufferMemory; // 索引缓冲区记录
 
-    VkBuffer uniformBuffer; // 
-    VkDeviceMemory uniformBufferMemory;
+    VkBuffer uniformBuffer; // 统一化缓冲区
+    VkDeviceMemory uniformBufferMemory;// 统一化缓冲区记录
 
     VkDescriptorPool descriptorPool; // 描述符集
     VkDescriptorSet descriptorSet; // 描述符设置
@@ -273,7 +273,7 @@ private:
         createTextureImage();       // 创建加载纹理图片 stb库
         createTextureImageView();   // 创建图像视图访问纹理图像
         createTextureSampler();     // 创建配置采样器对象
-        loadModel();                // 加载模型
+        loadModel();                // 加载模型 tinyobjloader库
         createVertexBuffer();       // 创建顶点缓冲区
         createIndexBuffer();        // 创建顶点索引缓冲区
         createUniformBuffer();      // 创建统一缓冲区
@@ -748,6 +748,7 @@ private:
         dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;// 指定要等待的操作和这些操作发生的阶段
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;// 颜色附件阶段的操作及涉及颜色附件的读取和写入的操作应该等待
 
+        // 引用颜色和深度两个附件
         std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -758,6 +759,7 @@ private:
         renderPassInfo.dependencyCount = 1; // 指定依赖的数量
         renderPassInfo.pDependencies = &dependency; // 指定依赖的数组
 
+        // 创建渲染通道
         if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to create render pass!");
@@ -907,9 +909,9 @@ private:
         // 深度缓冲区
         VkPipelineDepthStencilStateCreateInfo depthStencil = {};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+        depthStencil.depthTestEnable = VK_TRUE;// 指定是否应该将新的深度缓冲区与深度缓冲区进行比较，以确认是否应该被丢弃
+        depthStencil.depthWriteEnable = VK_TRUE;// 指定通过深度测试的新的片段深度是否应该被实际写入深度缓冲区。这在绘制透明对象的时候非常有用。它们应该与之前渲染的不透明对象进行比较，但不会导致更远的透明对象不被绘制
+        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;// 指定执行保留或者丢弃片段的比较细节。坚持深度值较低的惯例，它意味着更近。所以新的片段的深度应该更小
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.stencilTestEnable = VK_FALSE;
 
@@ -1039,9 +1041,12 @@ private:
         // 候选格式列表中 根据期望值的降序原则，检测第一个得到支持的格式
         VkFormat depthFormat = findDepthFormat();
 
+        // 创建图像
         createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        // 深度图像视图
         depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
+        // 未定义的布局可以作为初始布局，因为深度图像内容无关紧要。我们需要在 transitionImageLayout 中更新一些逻辑使用正确的子资源
         transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
 
@@ -1081,6 +1086,7 @@ private:
         throw std::runtime_error("failed to find supported format!");
     }
 
+    // 判断所选择的深度格式是否包含模版组件
     bool hasStencilComponent(VkFormat format)
     {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
@@ -1282,6 +1288,7 @@ private:
         {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
+            // 判断所选择的深度格式是否包含模版组件
             if (hasStencilComponent(format))
             {
                 barrier.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
@@ -1380,9 +1387,10 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-    // 加载模型
+    // 加载模型 tinyobjloader库
     void loadModel()
     {
+        // 加载obj模型
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -1411,6 +1419,7 @@ private:
 
                 vertex.texCoord =
                 {  // 本项目中,使用坐标从左上角0,0到右下角的1,1来映射纹理,从而简单的填充矩形.在这里可以尝试各种坐标.可以尝试使用低于0或者1以上的坐标来查看寻址模式的不同表现
+                   // 由于Vulkan的纹理坐标的起点是左上角，而OBJ格式则是左下角。通过反转纹理坐标的垂直分量来解决这个问题
                     attrib.texcoords[(uint64_t)2 * index.texcoord_index + 0],
                     1.0f - attrib.texcoords[(uint64_t)2 * index.texcoord_index + 1]
                 };
@@ -1859,7 +1868,7 @@ private:
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
 
-        // 
+        // 交换链集合
         VkSwapchainKHR swapChains[] = { swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
@@ -1900,7 +1909,7 @@ private:
         return shaderModule;
     }
     
-    // 设置sufface格式
+    // 选择交换链表面格式
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> & availableFormats) 
     {
         // 最理想的情况是surface没有设置任何偏向性的格式，
@@ -2114,6 +2123,7 @@ private:
         return indices;
     }
 
+    // 获取所需的扩展
     std::vector<const char*> getRequiredExtensions() 
     {
         std::vector<const char*> extensions;
@@ -2135,6 +2145,7 @@ private:
         return extensions;
     }
 
+    // 检查验证层支持
     bool checkValidationLayerSupport() 
     {
         uint32_t layerCount;
@@ -2186,6 +2197,7 @@ private:
         return buffer;
     }
 
+    // debug回调
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj, size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userData)
     {
         std::cerr << "validation layer: " << msg << std::endl;
