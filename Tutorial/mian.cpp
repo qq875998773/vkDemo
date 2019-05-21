@@ -24,6 +24,7 @@
 #include <array>
 #include <set>
 #include <unordered_map>
+// #include "vulkan/vulkan.hpp" // 面向对象调用方式
 
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
@@ -93,7 +94,7 @@ struct Vertex
 {
     glm::vec3 pos; // 顶点xyz
     glm::vec3 color; // 颜色rgb
-    glm::vec2 texCoord; // 
+    glm::vec2 texCoord; // 纹理坐标UV
 
     // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率。换句话说，它指定数据条目之间的间隔字节数以及是否每个顶点之后或者每个instance之后移动到下一个条目
     static VkVertexInputBindingDescription getBindingDescription()
@@ -206,14 +207,14 @@ private:
 
     VkCommandPool commandPool; //
 
-    VkImage depthImage;
-    VkDeviceMemory depthImageMemory;
-    VkImageView depthImageView;
+    VkImage depthImage; // 图像深度附件
+    VkDeviceMemory depthImageMemory;// 图像深度附件记录
+    VkImageView depthImageView;// 图像深度视图
 
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-    VkSampler textureSampler;
+    VkImage textureImage; // 纹理图片
+    VkDeviceMemory textureImageMemory; // 纹理图片记录
+    VkImageView textureImageView; // 纹理图像视图
+    VkSampler textureSampler; // 纹理采样器
 
     std::vector<Vertex> vertices; // 顶点集合
     /*
@@ -231,8 +232,8 @@ private:
     VkBuffer uniformBuffer; // 
     VkDeviceMemory uniformBufferMemory;
 
-    VkDescriptorPool descriptorPool;
-    VkDescriptorSet descriptorSet;
+    VkDescriptorPool descriptorPool; // 描述符集
+    VkDescriptorSet descriptorSet; // 描述符设置
 
     std::vector<VkCommandBuffer> commandBuffers; // 命令缓冲区集
 
@@ -267,17 +268,17 @@ private:
         createDescriptorSetLayout();// 创建描述符设置布局
         createGraphicsPipeline();   // 图形管线
         createCommandPool();        // 创建令缓冲区
-        createDepthResources();     // 
+        createDepthResources();     // 创建深度图像
         createFramebuffers();       // 帧缓冲区
-        createTextureImage();
-        createTextureImageView();
-        createTextureSampler();
-        loadModel();
+        createTextureImage();       // 创建加载纹理图片 stb库
+        createTextureImageView();   // 创建图像视图访问纹理图像
+        createTextureSampler();     // 创建配置采样器对象
+        loadModel();                // 加载模型
         createVertexBuffer();       // 创建顶点缓冲区
         createIndexBuffer();        // 创建顶点索引缓冲区
-        createUniformBuffer();
-        createDescriptorPool();
-        createDescriptorSet();
+        createUniformBuffer();      // 创建统一缓冲区
+        createDescriptorPool();     // 创建描述符集合
+        createDescriptorSet();      // 创建分配描述符集合
         createCommandBuffers();     // 创建命令缓冲区
         createSemaphores();         // 创建信号对象
     }
@@ -330,13 +331,13 @@ private:
     {
         cleanupSwapChain(); // 清除交换链
 
-        vkDestroySampler(device, textureSampler, nullptr);
-        vkDestroyImageView(device, textureImageView, nullptr);
+        vkDestroySampler(device, textureSampler, nullptr);// 销毁纹理采样器
+        vkDestroyImageView(device, textureImageView, nullptr);// 销毁纹理图像视图
 
-        vkDestroyImage(device, textureImage, nullptr);
-        vkFreeMemory(device, textureImageMemory, nullptr);
+        vkDestroyImage(device, textureImage, nullptr);// 清除贴图图像
+        vkFreeMemory(device, textureImageMemory, nullptr);// 清除贴图图像记录
 
-        vkDestroyDescriptorPool(device, descriptorPool, nullptr); 
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr); // 销毁描述对象池
 
         vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
         vkDestroyBuffer(device, uniformBuffer, nullptr);
@@ -524,7 +525,12 @@ private:
 
         // 明确的信息有关设备要使用的功能特性
         VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
+        deviceFeatures.samplerAnisotropy = VK_TRUE;// 采样器各向异性
+        /*
+        如果不是强制使用各向异性滤波器，也可以简单的通过条件设定来不使用它：
+            samplerInfo.anisotropyEnable = VK_FALSE;
+            samplerInfo.maxAnisotropy = 1;
+        */
 
         // 使用上面的两个结构体，我们可以填充VkDeviceCreateInfo结构
         VkDeviceCreateInfo createInfo = {};
@@ -666,8 +672,6 @@ private:
     // 渲染通道
     void createRenderPass() 
     {
-
-
         // 颜色缓冲区附件
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = swapChainImageFormat;// 颜色附件的格式，应该与交换链中图像的格式相匹配
@@ -771,15 +775,15 @@ private:
         uboLayoutBinding.descriptorCount = 1; // 
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uboLayoutBinding.pImmutableSamplers = nullptr; // pImmutableSamplers字段仅仅与图像采样的描述符有关
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; //  描述符在着色器哪个阶段被引用
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT; // 描述符在着色器哪个阶段被引用
 
-
+        // 组合图像采样器描述符
         VkDescriptorSetLayoutBinding samplerLayoutBinding = {};
         samplerLayoutBinding.binding = 1;
         samplerLayoutBinding.descriptorCount = 1;
         samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;// 确保stageFlags正确设置,指定打算在片段着色器中使用组合图像采样器描述符.这就是片段颜色最终被确定的地方.可以在顶点着色器中使用纹理采样，比如通过高度图heightmap动态的变形顶点的网格
 
         std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo = {};
@@ -1029,8 +1033,10 @@ private:
         }
     }
 
+    // 创建深度图像资源
     void createDepthResources()
     {
+        // 候选格式列表中 根据期望值的降序原则，检测第一个得到支持的格式
         VkFormat depthFormat = findDepthFormat();
 
         createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
@@ -1039,13 +1045,29 @@ private:
         transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
 
+    // 候选格式列表中 根据期望值的降序原则,检测第一个得到支持的格式
+    VkFormat findDepthFormat()
+    {
+        return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+            VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+    }
+
+    // 候选格式列表中 根据期望值的降序原则，检测第一个得到支持的格式
     VkFormat findSupportedFormat(const std::vector<VkFormat> & candidates, VkImageTiling tiling, VkFormatFeatureFlags features) 
     {
         for (VkFormat format : candidates) 
         {
+            /*
+            VkFormatProperties 结构体包含三个字段：
+                linearTilingFeatures: 使用线性平铺格式
+                optimalTilingFeatures: 使用最佳平铺格式
+                bufferFeatures: 支持缓冲区
+            */
             VkFormatProperties props;
+            // 支持的格式依赖于所使用的 tiling mode平铺模式和具体的用法，所以必须包含这些参数。可以使用 vkGetPhysicalDeviceFormatProperties 函数查询格式的支持
             vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
 
+            // 
             if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
             {
                 return format;
@@ -1059,72 +1081,91 @@ private:
         throw std::runtime_error("failed to find supported format!");
     }
 
-    VkFormat findDepthFormat() 
-    {
-        return findSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-                                    VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-    }
-
     bool hasStencilComponent(VkFormat format)
     {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
+    // 创建加载纹理图片
     void createTextureImage() 
     {
         int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;
+        // STBI_rgb_alpha值强制加载图片的alpha通道，即使它本身没有alpha，但是这样做对于将来加载其他的纹理的一致性非常友好，像素在STBI_rgba_alpha的情况下逐行排列，每个像素4个字节
+        stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);// 使用文件的路径和通道的数量作为参数加载图片
+        VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;// 图片的像素值
 
         if (!pixels)
         { 
             throw std::runtime_error("failed to load texture image!");
         }
 
+        // 图片像素缓冲区
         VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
+        VkDeviceMemory stagingBufferMemory; // 图片像素存储
         createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
+        // 直接从库中加载的图片中拷贝像素到缓冲区
         void* data;
         vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
         memcpy(data, pixels, static_cast<size_t>(imageSize));
         vkUnmapMemory(device, stagingBufferMemory);
 
-        stbi_image_free(pixels);
+        stbi_image_free(pixels); // 清理原图像的像素数据
 
+        // 创建贴图图像
         createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
+        // 处理布局变换
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        // 拷贝暂存缓冲区到贴图图像
         copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        // 变换来准备着色器访问
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);
-        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(device, stagingBuffer, nullptr);// 清理暂存缓冲区
+        vkFreeMemory(device, stagingBufferMemory, nullptr);// 清理分配的内存
     }
 
+    // 创建图像视图访问纹理图像
     void createTextureImageView()
     {
         textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
+    
+    /* createTextureSampler
+    需要注意的是采样器没有任何地方引用VkImage
+    采样器是一个独特的对象，它提供了从纹理中提取颜色的接口
+    它可以应用在任何期望的图像中，无论是1D，2D，或者是3D。也与之前很多旧的API是不同的，后者将纹理图像与过滤器混合成单一状态
+    */
+    // 创建配置采样器对象
     void createTextureSampler()
     {
+        // 指定将要应用的过滤器和变换
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         samplerInfo.magFilter = VK_FILTER_LINEAR;
         samplerInfo.minFilter = VK_FILTER_LINEAR;
-        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE;
-        samplerInfo.maxAnisotropy = 16;
-        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-        samplerInfo.unnormalizedCoordinates = VK_FALSE;
-        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;// 指定轴向使用的寻址模式,在这里称为U代替X,这是纹理空间坐标的约定
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;// 指定轴向使用的寻址模式,在这里称为V代替Y,这是纹理空间坐标的约定
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;// 指定轴向使用的寻址模式,在这里称为W代替Z,这是纹理空间坐标的约定
+        /*寻址模式有以下几种:
+            VK_SAMPLER_ADDRESS_MODE_REPEAT：当超过图像尺寸的时候采用循环填充
+            VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT：与循环模式类似，但是当超过图像尺寸的时候，它采用反向镜像效果
+            VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE：当超过图像尺寸的时候，采用边缘最近的颜色进行填充
+            VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TOEDGE：与边缘模式类似，但是使用与最近边缘相反的边缘进行填充
+            VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER：当采样超过图像的尺寸时，返回一个纯色填充
+        */
+        samplerInfo.anisotropyEnable = VK_TRUE;// 指定是否使用各向异性过滤器。没有理由不使用该特性，除非性能是一个问题
+        samplerInfo.maxAnisotropy = 16;// 限制可用于计算最终颜色的纹素采样的数量。低的数值会得到好性能，但会得到差的质量.当前没有任何的图形硬件可以使用超过16个采样器，因为超过16个采样器的差异可以忽略不计
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;// 指定采样范围超过图像时候返回的颜色，与之对应的是边缘寻址模式。可以用float或int返回黑色，白色或透明度。但是不能指定任意颜色
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;// 指定使用的坐标系统，用于访问图像的纹素。如果字段为VK_TRUE，意味着可以简单的使用坐标范围为 [ 0, texWidth ) 和 [ 0, texHeight )。如果使用VK_FALSE，意味着每个轴向纹素访问使用  [ 0, 1) 范围。真实的应用程序总是使用归一化的坐标。因为这样可以使用完全相同坐标的不同分辨率的纹理
+        samplerInfo.compareEnable = VK_FALSE;// 关闭比较功能；如果开启比较功能，那么纹素首先和值进行比较，并且比较后的值用于过滤操作,主要用在阴影纹理映射的 percentage-closer filtering 即百分比近似过滤器
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) 
+        // 创建配置采样器对象
+        if (vkCreateSampler(device, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create texture sampler!");
         }
@@ -1157,23 +1198,40 @@ private:
         return imageView;
     }
 
+    // 创建贴图图像
     void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image, VkDeviceMemory & imageMemory)
     {
+        // 图片初始化
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;// imageType字段指定图像类型，告知Vulkan采用什么样的坐标系在图像中采集纹素。它可以是1D，2D和3D图像。1D图像用于存储数组数据或者灰度图，2D图像主要用于纹理贴图，3D图像用于存储立体纹素
         imageInfo.extent.width = width;
         imageInfo.extent.height = height;
         imageInfo.extent.depth = 1;
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
-        imageInfo.format = format;
+        imageInfo.format = format; // Vulkan支持多种图像格式，但无论如何我们要在缓冲区中为纹素应用与像素一致的格式，否则拷贝操作会失败
         imageInfo.tiling = tiling;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = usage;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        /*
+        tiling字段可以设定两者之一：
+            VK_IMAGE_TILING_LINEAR: 纹素基于行主序的布局，如pixels数组
+            VK_IMAGE_TILING_OPTIMAL: 纹素基于具体的实现来定义布局，以实现最佳访问
+          与图像布局不同的是，tiling模式不能在之后修改。如果需要在内存图像中直接访问纹素，必须使用VK_IMAGE_TILING_LINEAR。
+          将会使用暂存缓冲区代替暂存图像，所以这部分不是很有必要。为了更有效的从shader中访问纹素，会使用VK_IMAGE_TILING_OPTIMAL
+        */
 
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        /*
+        图像的initialLayout字段，有两个可选的值：
+            VK_IMAGE_LAYOUT_UNDEFINED: GPU不能使用，第一个变换将丢弃纹素。
+            VK_IMAGE_LAYOUT_PREINITIALIZED: GPU不能使用，但是第一次变换将会保存纹素。
+        */
+
+        imageInfo.usage = usage;// 图像将会被用作缓冲区拷贝的目标，所以应该设置作为传输目的地。我们还希望从着色器中访问图像对我们的mesh进行着色，因此具体的usage还要包括VK_IMAGE_USAGE_SAMPLED_BIT
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;// 多重采样,这里仅仅适用于作为附件的图像，所以坚持一个采样数值
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;// 因为图像会在一个队列簇中使用：支持图形或者传输操作
+
+        // 创建图形
         if (vkCreateImage(device, &imageInfo, nullptr, &image) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to create image!");
@@ -1195,22 +1253,32 @@ private:
             throw std::runtime_error("failed to allocate image memory!");
         }
 
+        // 为图像工作分配内存
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) 
+    // 处理布局变换 管线屏障
+    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
     {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
+        /*
+        通常主流的做法用于处理图像变换是使用 image memory barrier。
+        一个管线的屏障通常用于访问资源的时候进行同步，也类似缓冲区在读操作之前完成写入操作，当然也可以用于图像布局的变换以及在使用 VK_SHARING_MODE_EXCLUSIVE 模式情况下，传输队列簇宿主的变换
+        缓冲区有一个等价的 buffer memory barrier
+        */
+
+        // 图形存储屏障
         VkImageMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = oldLayout;
         barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = image;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障，需要设置队列簇的索引。如果不关心，则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障，需要设置队列簇的索引。如果不关心，则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
+        barrier.image = image;// 指定受到影响的图像
 
-        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) 
+        // subresourceRange指定受到影响的图像特定区域
+        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
         {
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
@@ -1234,6 +1302,8 @@ private:
 
         if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) 
         {
+            // srcAccessMask|dstAccessMask 屏障主要用于同步目的，所以必须在应用屏障前指定哪一种操作类型及涉及到的资源，同时要指定哪一种操作及资源必须等待屏障
+            // 必须这样做尽管使用vkQueueWaitIdle人为的控制同步。正确的值取决于旧的和新的布局，所以知道了要使用的变换，就可以回到布局部分
             barrier.srcAccessMask = 0;
             barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
@@ -1261,6 +1331,7 @@ private:
             throw std::invalid_argument("unsupported layout transition!");
         }
 
+        // 所有类型的管线屏障都使用同样的函数提交
         vkCmdPipelineBarrier(
             commandBuffer,
             sourceStage, destinationStage,
@@ -1269,14 +1340,28 @@ private:
             0, nullptr,
             1, &barrier
         );
+        /* vkCmdPipelineBarrier
+        所有类型的管线屏障都使用同样的函数提交。命令缓冲区参数后的第一个参数指定管线的哪个阶段，应用屏障同步之前要执行的前置操作
+        第二个参数指定操作将在屏障上等待的管线阶段。在屏障之前和之后允许指定管线阶段取决于在屏障之前和之后如何使用资源
+        允许的值列在规范的 table 表格中。比如，要在屏障之后从 uniform 中读取，指定使用VK_ACCESS_UNIFORM_READ_BIT以及初始着色器从 uniform 中读取作为管线阶段，例如 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+        为这种类型的指定非着色器管线阶段是没有意义的，并且当指定和使用类型不匹配的管线阶段时候，validation layer 将会提示警告信息
+        第三个参数可以设置为0或者VK_DEPENDENCY_BY_REGION_BIT。后者将屏障变换为每个区域的状态。这意味着，例如，允许已经写完资源的区域开始读的操作，更加细的粒度
+        最后三个参数引用管线屏障的数组，有三种类型，第一种 memory barriers，第二种, buffer memory barriers, 和 image memory barriers
+        需要注意的是这里没有使用VkFormat参数，但是会在深度缓冲区中使用它做一些特殊的变换
+        */
 
+
+        // 结束单个命令集
         endSingleTimeCommands(commandBuffer);
     }
 
+    // 缓冲区拷贝到图像
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
     {
+        // 命令缓冲区记录
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
+        // 指定拷贝具体哪一部分到图像的区域
         VkBufferImageCopy region = {};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
@@ -1288,8 +1373,10 @@ private:
         region.imageOffset = { 0, 0, 0 };
         region.imageExtent = { width, height, 1 };
 
+        // 缓冲区拷贝到图像的操作
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
+        // 结束单次命令集
         endSingleTimeCommands(commandBuffer);
     }
 
@@ -1323,7 +1410,7 @@ private:
                 };
 
                 vertex.texCoord =
-                {
+                {  // 本项目中,使用坐标从左上角0,0到右下角的1,1来映射纹理,从而简单的填充矩形.在这里可以尝试各种坐标.可以尝试使用低于0或者1以上的坐标来查看寻址模式的不同表现
                     attrib.texcoords[(uint64_t)2 * index.texcoord_index + 0],
                     1.0f - attrib.texcoords[(uint64_t)2 * index.texcoord_index + 1]
                 };
@@ -1359,6 +1446,7 @@ private:
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
+        // 
         copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
         vkDestroyBuffer(device, stagingBuffer, nullptr); // 清除顶点缓冲区
@@ -1388,15 +1476,17 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr); // 清除顶点索引缓冲区记录
     }
 
-    // 创建清除缓冲区
+    // 创建统一缓冲区 ubo
     void createUniformBuffer() 
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
         createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffer, uniformBufferMemory);
     }
 
+    // 创建描述符集合
     void createDescriptorPool()
     {
+        // 明确需要使用的描述符集合包含的描述符类型与数量
         std::array<VkDescriptorPoolSize, 2> poolSizes = {};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = 1;
@@ -1407,16 +1497,19 @@ private:
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = 1;
+        poolInfo.maxSets = 1;// 指定最大的描述符集合的分配数量
 
+        // 创建描述符集合
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor pool!");
         }
     }
 
+    // 创建分配描述符集合
     void createDescriptorSet()
     {
+        // 存储描述符集合的句柄
         VkDescriptorSetLayout layouts[] = { descriptorSetLayout };
         VkDescriptorSetAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1424,11 +1517,13 @@ private:
         allocInfo.descriptorSetCount = 1;
         allocInfo.pSetLayouts = layouts;
 
-        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS) 
+        // 分配描述符集合
+        if (vkAllocateDescriptorSets(device, &allocInfo, &descriptorSet) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate descriptor set!");
         }
 
+        // 指定缓冲区和描述符内部包含的数据的区域
         VkDescriptorBufferInfo bufferInfo = {};
         bufferInfo.buffer = uniformBuffer;
         bufferInfo.offset = 0;
@@ -1439,15 +1534,16 @@ private:
         imageInfo.imageView = textureImageView;
         imageInfo.sampler = textureSampler;
 
+        // 描述符集合
         std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
 
         descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        descriptorWrites[0].dstSet = descriptorSet;
-        descriptorWrites[0].dstBinding = 0;
-        descriptorWrites[0].dstArrayElement = 0;
-        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        descriptorWrites[0].descriptorCount = 1;
-        descriptorWrites[0].pBufferInfo = &bufferInfo;
+        descriptorWrites[0].dstSet = descriptorSet; // 描述符设置
+        descriptorWrites[0].dstBinding = 0; //  uniform buffer 绑定的索引设定为0。描述符可以是数组，所以需要指定要更新的数组索引。在这里没有使用数组，所以简单的设置为0
+        descriptorWrites[0].dstArrayElement = 0;// 起始索引
+        descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; // 
+        descriptorWrites[0].descriptorCount = 1; // 描述多少描述符需要被更新
+        descriptorWrites[0].pBufferInfo = &bufferInfo;// 指定描述符引用的缓冲区数据
 
         descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[1].dstSet = descriptorSet;
@@ -1455,8 +1551,9 @@ private:
         descriptorWrites[1].dstArrayElement = 0;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = 1;
-        descriptorWrites[1].pImageInfo = &imageInfo;
+        descriptorWrites[1].pImageInfo = &imageInfo; // 用于指定描述符引用的图像数据
 
+        // 描述符的配置更新
         vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
@@ -1529,12 +1626,13 @@ private:
             VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT: 命令缓冲区也可以重新提交，同时它也在等待执行。
         */
 
+        // 开始命令缓冲区
         vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
         return commandBuffer;
     }
 
-    // 
+    // 结束单次命令集
     void endSingleTimeCommands(VkCommandBuffer commandBuffer) 
     {
         vkEndCommandBuffer(commandBuffer);
@@ -1642,6 +1740,7 @@ private:
 
             vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32); // 绑定索引缓冲区
 
+            // 将描述符集合绑定到实际的着色器的描述符中
             vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
             // 前两个参数指定索引的数量和几何instance数量。没有使用instancing，所以指定1。
@@ -1727,7 +1826,7 @@ private:
         // 队列提交和同步
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
+        
         // 等待缓冲区信号集
         VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
         VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }; // 数组对应pWaitSemaphores中具有相同索引的信号
@@ -2066,6 +2165,7 @@ private:
         return true;
     }
 
+    // 读取文件
     static std::vector<char> readFile(const std::string & filename)
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
