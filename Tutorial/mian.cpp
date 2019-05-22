@@ -1788,6 +1788,7 @@ private:
     {
         // 鼠标操作
         static glm::vec3 position = glm::vec3(1.7f, 1.7f, 1.7f);// 初始摄像机位置
+        static glm::vec3 centre = glm::vec3(0.0f, 0.0f, 0.0f); // 模型中心
         float FoV = 45.0f;
 
         // 获取当前坐标位置
@@ -1818,7 +1819,7 @@ private:
 
             if (50.f > i_ypos > 0|| 0 > i_ypos > -50.f)
             {
-                position = glm::vec3(position.x, position.y * std::cos(seep * i_ypos) - position.z * std::sin(seep * i_ypos), position.z * std::sin(seep * i_ypos) + position.z * std::cos(seep * i_ypos));
+                position = glm::vec3(position.x, position.y * std::cos(-seep * i_ypos) - position.z * std::sin(-seep * i_ypos), position.y * std::sin(-seep * i_ypos) + position.z * std::cos(-seep * i_ypos));
             }
         }
         // 鼠标中键滚动
@@ -1829,26 +1830,28 @@ private:
         // 键盘W
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
-
+            centre = glm::vec3(centre.x, centre.y, centre.z - 0.01f);
         }
         // 键盘S
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         {
-
+            centre = glm::vec3(centre.x, centre.y, centre.z + 0.01f);
         }
-        // 键盘Q
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        // 键盘A
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
         {
-
+            position = glm::vec3(position.x - 0.01f, position.y, position.z);
+            centre = glm::vec3(centre.x - 0.01f, centre.y, centre.z);
         }
-        // 键盘E
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        // 键盘D
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         {
-
+            position = glm::vec3(position.x + 0.01f, position.y, position.z);
+            centre = glm::vec3(centre.x + 0.01f, centre.y, centre.z);
         }
 
         UniformBufferObject ubo = {};
-        ubo.view = glm::lookAt(position, glm::vec3(0.0f, 0.0f, 0.0f),up); // 摄像机位置/中心位置/上下仰角
+        ubo.view = glm::lookAt(position, centre,up); // 摄像机位置/中心位置/上下仰角
         // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度.
         ubo.proj = glm::perspective(glm::radians(FoV), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置.
@@ -1859,8 +1862,6 @@ private:
         vkMapMemory(device, uniformBufferMemory, 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
         vkUnmapMemory(device, uniformBufferMemory);
-
-        //lastTime = currentTime;
     }
 
     // 绘制帧 从交换链获取图像，在帧缓冲区中使用作为附件的图像来执行命令缓冲区中的命令，将图像返还给交换链最终呈现
