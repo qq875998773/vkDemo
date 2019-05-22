@@ -1811,21 +1811,22 @@ private:
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
             double seep = -0.001f;
-            if (50.f > i_xpos > 0)
+            if (50.f > i_xpos > 0|| 0 > i_xpos > -50.f)
             {
                 position = glm::vec3(position.x * std::cos(seep* i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
             }
-            else if (0 > i_xpos > -50.f)
+
+            if (50.f > i_ypos > 0|| 0 > i_ypos > -50.f)
             {
-                position = glm::vec3(position.x * std::cos(seep * i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
+                position = glm::vec3(position.x, position.y * std::cos(seep * i_ypos) - position.z * std::sin(seep * i_ypos), position.z * std::sin(seep * i_ypos) + position.z * std::cos(seep * i_ypos));
             }
         }
         // Êó±êÖÐ¼ü¹ö¶¯
-        if (glfwGetMouseButton(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
         {
-
+            
         }
-        // ¼üÅÌW 
+        // ¼üÅÌW
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         {
 
