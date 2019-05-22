@@ -41,6 +41,7 @@ const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_N
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
+// 指定要启用的layers并开启它们
 const bool enableValidationLayers = true;
 #endif
 
@@ -57,6 +58,7 @@ VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCa
     }
 }
 
+// 
 void DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) 
 {
     auto func = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
@@ -79,7 +81,7 @@ struct QueueFamilyIndices
     }
 };
 
-// 如果仅仅是为了测试交换链的有效性是远远不够的，因为它还不能很好的与窗体surface兼容。
+// 如果仅仅是为了测试交换链的有效性是远远不够的，因为它还不能很好的与窗体surface兼容
 // 创建交换链同样也需要很多设置，所以我们需要了解一些有关设置的细节
 // 交换链结构体详细信息
 struct SwapChainSupportDetails
@@ -176,9 +178,8 @@ public:
 
 private:
     GLFWwindow* window; // 窗体实例
-
     VkInstance instance; // vk实例
-    VkDebugReportCallbackEXT callback; // debug异常检测
+    VkDebugReportCallbackEXT callback; // debug异常检测,存储回调句柄
     /*
      需要在instance创建之后立即创建窗体surface
      因为它会影响物理设备的选择。
@@ -244,7 +245,6 @@ private:
     void initWindow()
     {
         glfwInit();
-
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
         // 创建窗体 设置尺寸和标题
@@ -258,8 +258,8 @@ private:
     void initVulkan() 
     {
         createInstance();           // 创建实例
-        setupDebugCallback();       // 
-        createSurface();            // 窗体和vulkan实例连接
+        setupDebugCallback();       // 设置调试回调句柄
+        createSurface();            // 创建窗体和vulkan实例连接
         pickPhysicalDevice();       // 选择设备
         createLogicalDevice();      // 创建逻辑设备
         createSwapChain();          // 交换链
@@ -289,7 +289,6 @@ private:
         while (!glfwWindowShouldClose(window)) 
         {
             glfwPollEvents();
-
             updateUniformBuffer(); // 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转，移动，放缩等变换
             drawFrame(); // 绘制帧
         }
@@ -412,7 +411,7 @@ private:
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo; // 把运行时赋给实例
 
-        // 
+        // 获取所需的扩展
         auto extensions = getRequiredExtensions();
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
@@ -433,6 +432,7 @@ private:
         }
     }
 
+    // 设置调试回调句柄
     void setupDebugCallback()
     {
         if (!enableValidationLayers) return;
@@ -442,7 +442,7 @@ private:
         createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
         createInfo.pfnCallback = debugCallback;
 
-        if (CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback) != VK_SUCCESS) 
+        if (CreateDebugReportCallbackEXT(instance, &createInfo, nullptr, &callback) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to set up debug callback!");
         }
@@ -1787,29 +1787,79 @@ private:
     void updateUniformBuffer()
     {
         // 鼠标操作
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos); // 获取当前鼠标位置
+        static glm::vec3 position = glm::vec3(1.7f, 1.7f, 1.7f);// 初始摄像机位置
+        float FoV = 45.0f;
 
+        // 获取当前坐标位置
+        static double last_xpos, last_ypos;
 
+        double temp_xpos, temp_ypos;
+        glfwGetCursorPos(window, &temp_xpos, &temp_ypos);
 
-        // 时间控制旋转
-        static auto startTime = std::chrono::high_resolution_clock::now();
+        // 计算当前帧鼠标位置和上一帧的差别
+        double i_xpos = temp_xpos - last_xpos;
+        double i_ypos = temp_ypos - last_ypos;
 
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count() / 3000.0f;
+        // 把当前帧鼠标位置赋值给上一帧鼠标位置
+        last_xpos = temp_xpos;
+        last_ypos = temp_ypos;
+
+        // 仰角
+        glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+        
+        // 鼠标左键按下
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        {
+            double seep = -0.001f;
+            if (50.f > i_xpos > 0)
+            {
+                position = glm::vec3(position.x * std::cos(seep* i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
+            }
+            else if (0 > i_xpos > -50.f)
+            {
+                position = glm::vec3(position.x * std::cos(seep * i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
+            }
+        }
+        // 鼠标中键滚动
+        if (glfwGetMouseButton(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        {
+
+        }
+        // 键盘W 
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        {
+
+        }
+        // 键盘S
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        {
+
+        }
+        // 键盘Q
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        {
+
+        }
+        // 键盘E
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        {
+
+        }
 
         UniformBufferObject ubo = {};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(1.7f, 1.7f, 1.7f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)); // 摄像机位置/中心位置/上下仰角
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);// 选择使用FOV为45度的透视投影。其他参数是宽高比，近裁剪面和远裁剪面。重要的是使用当前的交换链扩展来计算宽高比，以便在窗体调整大小后参考最新的窗体宽度和高度
-        ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的，它的裁剪坐标的Y是反转的。修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转。如果不这样做图像会被倒置
-
-        // 现在定义了所有的变换，所以将UBO中的数据复制到uniform缓冲区。除了没有暂存缓冲区，这与顶点缓冲区的操作完全相同
-        // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式。相比传递一个更小的数据缓冲区到着色器中，更有效的方式是使用常量
+        ubo.view = glm::lookAt(position, glm::vec3(0.0f, 0.0f, 0.0f),up); // 摄像机位置/中心位置/上下仰角
+        // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度.
+        ubo.proj = glm::perspective(glm::radians(FoV), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+        ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置.
+        
+        // 现在定义了所有的变换,所以将UBO中的数据复制到uniform缓冲区.除了没有暂存缓冲区,这与顶点缓冲区的操作完全相同.
+        // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式.相比传递一个更小的数据缓冲区到着色器中,更有效的方式是使用常量.
         void* data;
         vkMapMemory(device, uniformBufferMemory, 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
         vkUnmapMemory(device, uniformBufferMemory);
+
+        //lastTime = currentTime;
     }
 
     // 绘制帧 从交换链获取图像，在帧缓冲区中使用作为附件的图像来执行命令缓冲区中的命令，将图像返还给交换链最终呈现
@@ -2145,21 +2195,24 @@ private:
         return extensions;
     }
 
-    // 检查验证层支持
+    // 检测所有请求的layers是否可用
     bool checkValidationLayerSupport() 
     {
         uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr); // 列出所有可用的层
 
+        // 给所有layer赋值
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
+        // 
         for (const char* layerName : validationLayers)
         {
             bool layerFound = false;
 
             for (const auto& layerProperties : availableLayers) 
             {
+                // 比较字符 如果不相等
                 if (strcmp(layerName, layerProperties.layerName) == 0)
                 {
                     layerFound = true;
