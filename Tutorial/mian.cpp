@@ -885,7 +885,7 @@ private:
         // 光栅化
         VkPipelineRasterizationStateCreateInfo rasterizer = {};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE; // 超过远近裁剪面的片元会进行收敛,而不是丢弃它们.它在特殊的情况下比较有用,像阴影贴图.使用该功能需要得到GPU的支持
+        rasterizer.depthClampEnable = VK_FALSE; // 超过远近裁剪面的片元会进行收敛,而不是丢弃它们.它在特殊的情况下比较有用,像阴影贴图.使用该功能需要得到GPU的支持,深度测试
         rasterizer.rasterizerDiscardEnable = VK_FALSE; // 设置为VK_TRUE,那么几何图元永远不会传递到光栅化阶段.这是基本的禁止任何输出到framebuffer帧缓冲区的方法
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // polygonMode决定几何产生图片的内容
         /*
