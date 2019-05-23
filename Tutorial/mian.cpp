@@ -35,7 +35,7 @@ const std::string TEXTURE_PATH = "textures/chalet.jpg"; // 纹理图片路径
 // 异常处理层
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
 
-// 将渲染图像提交到屏幕的基本机制，这种机制称为交换链。
+// 将渲染图像提交到屏幕的基本机制，这种机制称为交换链
 const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 #ifdef NDEBUG
@@ -98,7 +98,7 @@ struct Vertex
     glm::vec3 color; // 颜色rgb
     glm::vec2 texCoord; // 纹理坐标UV
 
-    // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率。换句话说，它指定数据条目之间的间隔字节数以及是否每个顶点之后或者每个instance之后移动到下一个条目
+    // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率.换句话说,它指定数据条目之间的间隔字节数以及是否每个顶点之后或者每个instance之后移动到下一个条目
     static VkVertexInputBindingDescription getBindingDescription()
     {
         VkVertexInputBindingDescription bindingDescription = {};
@@ -107,8 +107,8 @@ struct Vertex
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;// 移动到每个顶点后的下一个数据条目
         /*
         inputRate参数可以具备一下值之一：
-            VK_VERTEX_INPUT_RATE_VERTEX: 移动到每个顶点后的下一个数据条目
-            VK_VERTEX_INPUT_RATE_INSTANCE: 在每个instance之后移动到下一个数据条目
+            VK_VERTEX_INPUT_RATE_VERTEX:移动到每个顶点后的下一个数据条目
+            VK_VERTEX_INPUT_RATE_INSTANCE:在每个instance之后移动到下一个数据条目
         */
 
         return bindingDescription;
@@ -120,12 +120,12 @@ struct Vertex
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
 
         attributeDescriptions[0].binding = 0; // binding参数告诉了Vulkan每个顶点数据的来源
-        attributeDescriptions[0].location = 0;// location参数引用了vertex shader作为输入的location指令。顶点着色器中，location为0代表position，它是32bit单精度数据
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;// format参数描述了属性的类型。该格式使用与颜色格式一样的枚举
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);// offset参数指定了每个顶点数据读取的字节宽度偏移量,绑定一次加载一个Vertex，position属性(pos)的偏移量在字节数据中为0字节。这是使用offsetof macro宏自动计算的
+        attributeDescriptions[0].location = 0;// location参数引用了vertex shader作为输入的location指令.顶点着色器中,location为0代表position,它是32bit单精度数据
+        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;// format参数描述了属性的类型.该格式使用与颜色格式一样的枚举
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);// offset参数指定了每个顶点数据读取的字节宽度偏移量,绑定一次加载一个Vertex,position属性(pos)的偏移量在字节数据中为0字节.这是使用offsetof macro宏自动计算的
 
         attributeDescriptions[1].binding = 0; // binding参数告诉了Vulkan每个顶点颜色数据的来源
-        attributeDescriptions[1].location = 1;// location参数引用了vertex shader作为输入的location指令。顶点着色器中，location为1代表color，它是32bit单精度数据
+        attributeDescriptions[1].location = 1;// location参数引用了vertex shader作为输入的location指令.顶点着色器中,location为1代表color,它是32bit单精度数据
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;// format参数描述了属性的类型
         attributeDescriptions[1].offset = offsetof(Vertex, color); // offset参数指定了每个颜色数据读取的字节宽度偏移量
 
@@ -182,8 +182,8 @@ private:
     VkDebugReportCallbackEXT callback; // debug异常检测,存储回调句柄
     /*
      需要在instance创建之后立即创建窗体surface
-     因为它会影响物理设备的选择。
-     窗体surface本身对于Vulkan也是非强制的。
+     因为它会影响物理设备的选择
+     窗体surface本身对于Vulkan也是非强制的
      Vulkan允许这样做，不需要同OpenGL一样必须要创建窗体surface
     */
     VkSurfaceKHR surface; // surface就是Vulkan与窗体系统的连接桥梁
@@ -195,7 +195,7 @@ private:
     VkQueue presentQueue;  // 演示队列句柄
 
     VkSwapchainKHR swapChain; // 交换链对象
-    std::vector<VkImage> swapChainImages; // 交换链图像， 图像被交换链创建，也会在交换链销毁的同时自动清理，所以不需要添加清理代码
+    std::vector<VkImage> swapChainImages; // 交换链图像, 图像被交换链创建,也会在交换链销毁的同时自动清理,所以不需要添加清理代码
     VkFormat swapChainImageFormat; // 交换链图像变换
     VkExtent2D swapChainExtent; // 交换链扩展
     std::vector<VkImageView> swapChainImageViews; // 保存图像视图的句柄集
@@ -289,7 +289,7 @@ private:
         while (!glfwWindowShouldClose(window)) 
         {
             glfwPollEvents();
-            updateUniformBuffer(); // 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转，移动，放缩等变换
+            updateUniformBuffer(); // 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转、移动、放缩等变换
             drawFrame(); // 绘制帧
         }
 
@@ -314,7 +314,7 @@ private:
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr); // 清除图形管线
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr); // 销毁pipeline layout
-        vkDestroyRenderPass(device, renderPass, nullptr); // 销毁渲染通道，渲染通道在整个程序生命周期内都被使用，所以需要在退出阶段进行清理
+        vkDestroyRenderPass(device, renderPass, nullptr); // 销毁渲染通道,渲染通道在整个程序生命周期内都被使用,所以需要在退出阶段进行清理
 
         // 图像视图需要明确的创建过程，所以在程序退出的时候，需要添加一个循环去销毁
         for (size_t i = 0; i < swapChainImageViews.size(); i++)
@@ -1811,7 +1811,7 @@ private:
         // 鼠标左键按下
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
-            double seep = -0.001f;
+            double seep = -0.01f;
             if (50.f > i_xpos > 0|| 0 > i_xpos > -50.f)
             {
                 position = glm::vec3(position.x * std::cos(seep* i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
@@ -2021,8 +2021,8 @@ private:
     {
         // 分辨率的范围被定义在VkSurfaceCapabilitiesKHR结构体中
         // Vulkan告诉我们通过设置currentExtent成员的width和height来匹配窗体的分辨率
-        // 一些窗体管理器允许不同的设置，意味着将currentExtent的width和height设置为特殊的数值表示:uint32_t的最大值。
-        // 在这种情况下，参考窗体minImageExtent和maxImageExtent选择最匹配的分辨率。
+        // 一些窗体管理器允许不同的设置，意味着将currentExtent的width和height设置为特殊的数值表示:uint32_t的最大值
+        // 在这种情况下，参考窗体minImageExtent和maxImageExtent选择最匹配的分辨率
 
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
         {
