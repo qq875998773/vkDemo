@@ -155,12 +155,12 @@ namespace std
     };
 }
 
-// 着色器数据
+// 着色器数据 ubo
 struct UniformBufferObject
 {
-    glm::mat4 model;  // 模型矩阵
-    glm::mat4 view;   // 摄像机矩阵
-    glm::mat4 proj;   // 世界矩阵
+    glm::mat4 model;  // 模型矩阵 模型在空间中的位置
+    glm::mat4 view;   // 视口矩阵 记录摄像机位置
+    glm::mat4 proj;   // 投影矩阵 根据物体离摄像机的远近 放缩模型
 };
 
 // 管线类
