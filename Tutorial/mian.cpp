@@ -26,11 +26,119 @@
 #include <unordered_map>
 // #include "vulkan/vulkan.hpp" // 面向对象调用方式
 
+
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
 
 const std::string MODEL_PATH = "models/chalet.obj"; // obj模型路径
 const std::string TEXTURE_PATH = "textures/chalet.jpg"; // 纹理图片路径
+
+#pragma region 鼠标键盘操作
+bool     g_is_left_pressed = false; // 键盘A
+bool     g_is_right_pressed = false;// 键盘D
+bool     g_is_fwd_pressed = false;// 键盘W
+bool     g_is_back_pressed = false;// 键盘S
+bool     g_is_mouse_tracking = false;
+//bool     g_is_double_click = false; // 鼠标双击
+bool     g_is_middle_pressed = false; // 鼠标中键
+glm::vec2   g_mouse_pos = glm::vec2(0.f, 0.f);
+glm::vec2   g_mouse_delta = glm::vec2(0.f, 0.f); // 鼠标右键拖动
+glm::vec2   g_scroll_delta = glm::vec2(0.f, 0.f); // 鼠标滚动
+
+// 鼠标移动
+void OnMouseMove(GLFWwindow* window, double x, double y)
+{
+    if (g_is_mouse_tracking)
+    {
+        g_mouse_delta = glm::vec2((float)x, (float)y) - g_mouse_pos;
+        g_mouse_pos = glm::vec2((float)x, (float)y);
+        std::cout << g_mouse_delta.x << "  " << g_mouse_delta.y << "\n";
+    }
+}
+
+// 鼠标滚轮
+void OnMouseScroll(GLFWwindow* window, double x, double y)
+{
+    g_scroll_delta = glm::vec2((float)x, (float)y);
+    std::cout << g_scroll_delta.x << "  " << g_scroll_delta.y << "\n";
+}
+
+// 鼠标按键
+void OnMouseButton(GLFWwindow* window, int button, int action, int mods)
+{
+    if ((button == GLFW_MOUSE_BUTTON_LEFT) ||
+        (button == GLFW_MOUSE_BUTTON_RIGHT) ||
+        (button == GLFW_MOUSE_BUTTON_MIDDLE))
+    {
+        if (action == GLFW_PRESS)
+        {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            g_mouse_pos = glm::vec2((float)x, (float)y);
+            g_mouse_delta = glm::vec2(0, 0);
+        }
+        else if (action == GLFW_RELEASE && g_is_mouse_tracking)
+        {
+            g_is_mouse_tracking = false;
+            g_is_middle_pressed = false;
+            g_mouse_delta = glm::vec2(0, 0);
+        }
+    }
+
+    if ((button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_PRESS))
+    {
+        g_is_mouse_tracking = true;
+    }
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        if (action == GLFW_PRESS)
+        {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            g_mouse_pos = glm::vec2((float)x, (float)y);
+        }
+
+        /*else if (action == GLFW_RELEASE && g_is_mouse_tracking)
+        {
+            g_is_double_click = false;
+        }*/
+    }
+
+    // 鼠标中键
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+    {
+        if (action == GLFW_PRESS)
+        {
+            g_is_middle_pressed = true;
+            g_is_mouse_tracking = true;
+        }
+    }
+}
+
+// 键盘点击
+void OnKey(GLFWwindow * window, int key, int scancode, int action, int mods)
+{
+    const bool press_or_repeat = action == GLFW_PRESS || action == GLFW_REPEAT;
+
+    switch (key)
+    {
+    case GLFW_KEY_W:
+        g_is_fwd_pressed = press_or_repeat;
+        break;
+    case GLFW_KEY_S:
+        g_is_back_pressed = press_or_repeat;
+        break;
+    case GLFW_KEY_A:
+        g_is_left_pressed = press_or_repeat;
+        break;
+    case GLFW_KEY_D:
+        g_is_right_pressed = press_or_repeat;
+    default:
+        break;
+    }
+}
+#pragma endregion
 
 // 异常处理层
 const std::vector<const char*> validationLayers = { "VK_LAYER_LUNARG_standard_validation" };
@@ -164,7 +272,7 @@ struct UniformBufferObject
 };
 
 // 管线类
-class Application 
+class Application
 {
 public:
     // 运行
@@ -1783,72 +1891,27 @@ private:
         }
     }
 
-    // 更新 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转,移动,放缩等变换
+    // 更新窗体显示 这个函数会在每一帧中创建新的变换矩阵以确保几何图形旋转,移动,放缩等变换
     void updateUniformBuffer()
     {
-        // 鼠标操作
+        // 初始化摄像机
         static glm::vec3 position = glm::vec3(1.7f, 1.7f, 1.7f);// 初始摄像机位置
         static glm::vec3 centre = glm::vec3(0.0f, 0.0f, 0.0f); // 模型中心
         float FoV = 45.0f;
+        glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);// 仰角
 
-        // 获取当前坐标位置
-        static double last_xpos, last_ypos;
-
-        double temp_xpos, temp_ypos;
-        glfwGetCursorPos(window, &temp_xpos, &temp_ypos);
-
-        // 计算当前帧鼠标位置和上一帧的差别
-        double i_xpos = temp_xpos - last_xpos;
-        double i_ypos = temp_ypos - last_ypos;
-
-        // 把当前帧鼠标位置赋值给上一帧鼠标位置
-        last_xpos = temp_xpos;
-        last_ypos = temp_ypos;
-
-        // 仰角
-        glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+        // 鼠标键盘操作
+        glfwSetWindowUserPointer(window, this);
+        glfwSetMouseButtonCallback(window, OnMouseButton);
+        glfwSetCursorPosCallback(window, OnMouseMove);
+        glfwSetKeyCallback(window, OnKey);
+        glfwSetScrollCallback(window, OnMouseScroll);
         
-        // 鼠标左键按下
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
-        {
-            double seep = -0.01f;
-            if (50.f > i_xpos > 0|| 0 > i_xpos > -50.f)
-            {
-                position = glm::vec3(position.x * std::cos(seep* i_xpos) - position.y * std::sin(seep * i_xpos), position.x * std::sin(seep * i_xpos) + position.y * std::cos(seep * i_xpos), position.z);
-            }
-
-            if (50.f > i_ypos > 0|| 0 > i_ypos > -50.f)
-            {
-                position = glm::vec3(position.x, position.y * std::cos(-seep * i_ypos) - position.z * std::sin(-seep * i_ypos), position.y * std::sin(-seep * i_ypos) + position.z * std::cos(-seep * i_ypos));
-            }
-        }
-        // 鼠标中键滚动
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
-        {
-            
-        }
-        // 键盘W
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            centre = glm::vec3(centre.x, centre.y, centre.z - 0.01f);
-        }
-        // 键盘S
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            centre = glm::vec3(centre.x, centre.y, centre.z + 0.01f);
-        }
-        // 键盘A
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            position = glm::vec3(position.x - 0.01f, position.y, position.z);
-            centre = glm::vec3(centre.x - 0.01f, centre.y, centre.z);
-        }
-        // 键盘D
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            position = glm::vec3(position.x + 0.01f, position.y, position.z);
-            centre = glm::vec3(centre.x + 0.01f, centre.y, centre.z);
-        }
+        double speed = -0.001f;
+        float  i_xpos = g_mouse_delta.x;
+        float  i_ypos = g_mouse_delta.y;
+        position = glm::vec3(position.x * std::cos(speed * i_xpos) - position.y * std::sin(speed * i_xpos), position.x * std::sin(speed * i_xpos) + position.y * std::cos(speed * i_xpos), position.z);
+        position = glm::vec3(position.x, position.y * std::cos(-speed * i_ypos) - position.z * std::sin(-speed * i_ypos), position.y * std::sin(-speed * i_ypos) + position.z * std::cos(-speed * i_ypos));
 
         UniformBufferObject ubo = {};
         ubo.view = glm::lookAt(position, centre,up); // 摄像机位置/中心位置/上下仰角
