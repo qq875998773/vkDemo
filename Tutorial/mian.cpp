@@ -276,7 +276,7 @@ private:
         loadModel();                // 加载模型 tinyobjloader库
         createVertexBuffer();       // 创建顶点缓冲区
         createIndexBuffer();        // 创建顶点索引缓冲区
-        createUniformBuffer();      // 创建统一缓冲区
+        createUniformBuffer();      // 创建全局缓冲区
         createDescriptorPool();     // 创建描述符集合
         createDescriptorSet();      // 创建分配描述符集合
         createCommandBuffers();     // 创建命令缓冲区
