@@ -338,7 +338,7 @@ private:
     VkBuffer indexBuffer; // 索引缓冲区
     VkDeviceMemory indexBufferMemory; // 索引缓冲区记录
 
-    VkBuffer uniformBuffer; // 统一化缓冲区
+    VkBuffer uniformBuffer; // 统一化缓冲区 Uniform:一个特殊类型的GLSL变量.它是全局的(在一个着色器程序中每一个着色器都能够访问uniform变量)并且只能被设定一次.
     VkDeviceMemory uniformBufferMemory;// 统一化缓冲区记录
 
     VkDescriptorPool descriptorPool; // 描述符集
@@ -1458,7 +1458,7 @@ private:
         /* vkCmdPipelineBarrier
         所有类型的管线屏障都使用同样的函数提交.命令缓冲区参数后的第一个参数指定管线的哪个阶段,应用屏障同步之前要执行的前置操作
         第二个参数指定操作将在屏障上等待的管线阶段.在屏障之前和之后允许指定管线阶段取决于在屏障之前和之后如何使用资源
-        允许的值列在规范的 table 表格中.比如,要在屏障之后从 uniform 中读取,指定使用VK_ACCESS_UNIFORM_READ_BIT以及初始着色器从 uniform 中读取作为管线阶段,例如 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+        允许的值列在规范的 table 表格中.比如,要在屏障之后从uniform中读取,指定使用VK_ACCESS_UNIFORM_READ_BIT以及初始着色器从uniform中读取作为管线阶段,例如 VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
         为这种类型的指定非着色器管线阶段是没有意义的,并且当指定和使用类型不匹配的管线阶段时候,validation layer 将会提示警告信息
         第三个参数可以设置为0或者VK_DEPENDENCY_BY_REGION_BIT.后者将屏障变换为每个区域的状态.这意味着,例如,允许已经写完资源的区域开始读的操作,更加细的粒度
         最后三个参数引用管线屏障的数组,有三种类型,第一种 memory barriers,第二种, buffer memory barriers, 和 image memory barriers
