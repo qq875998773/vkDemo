@@ -15,7 +15,7 @@ void main() {
 	vec3 lightColor = vec3(1.0,1.0,1.0);// 为点光添加颜色
 	// 计算法线和光
 	vec3 lightDir = normalize(fragLight - fragPos);
-	float diff = max(dot(fragNormal, lightDir), 0.0);
+	float diff = max(dot(fragNormal, lightDir), 0.0); // 取最大值函数，当法向和光的夹角大于90度时代表这个表面背光，取大值0.0，也就是不加光
     vec3 diffuse = diff * lightColor;
 	
 	vec3 scnen_lightColor = vec3(1.0,1.0,1.0); // 这里用来模拟环境光，这个值应该cpp buffer传进来

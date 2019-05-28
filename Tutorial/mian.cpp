@@ -1587,11 +1587,11 @@ private:
     // 画球
     void loadModel2()
     {
-        float M_PI = 3.1415926536;
+        float M_PI = 3.14159265359;
         float R = 0.7f;//球的半径
-        int statck = 20;//statck：切片----把球体横向切成几部分
+        int statck = 100;//statck：切片----把球体横向切成几部分
         float statckStep = (float)(M_PI / statck);//单位角度值
-        int slice = 30;//纵向切几部分
+        int slice = 300;//纵向切几部分
         float sliceStep = (float)(M_PI / slice);//水平圆递增的角度
 
         float r0, r1, x0, x1, y0, y1, z0, z1; //r0、r1为圆心引向两个临近切片部分表面的两条线 (x0,y0,z0)和(x1,y1,z1)为临近两个切面的点。
@@ -1653,17 +1653,17 @@ private:
             Vertex vertex0 = {};
             vertex0.pos = allvertices[i - 2].pos;
             vertex0.texCoord = allvertices[i - 2].texCoord;
-            vertex0.color = allvertices[i - 2].color;
+            vertex0.color = { 0.5f, 0.5f, 0.5f };
 
             Vertex vertex1 = {};
             vertex1.pos = allvertices[i - 1].pos;
             vertex1.texCoord = allvertices[i - 1].texCoord;
-            vertex1.color = allvertices[i - 1].color;
+            vertex1.color = { 0.5f, 0.5f, 0.5f };
 
             Vertex vertex2 = {};
             vertex2.pos = allvertices[i].pos;
             vertex2.texCoord = allvertices[i].texCoord;
-            vertex2.color = allvertices[i].color;
+            vertex2.color = { 0.5f, 0.5f, 0.5f };
 
             // 求这个面的法线
             glm::vec3 vec1 = vertex0.pos - vertex1.pos;
