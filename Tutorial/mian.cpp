@@ -205,6 +205,7 @@ struct Vertex
     glm::vec3 pos; // 顶点xyz
     glm::vec3 color; // 颜色rgb
     glm::vec2 texCoord; // 纹理坐标UV
+    glm::vec3 normal; // 顶点法线
 
     // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率.换句话说,它指定数据条目之间的间隔字节数以及是否每个顶点之后或者每个instance之后移动到下一个条目
     static VkVertexInputBindingDescription getBindingDescription()
@@ -223,9 +224,9 @@ struct Vertex
     }
 
     // 处理顶点的输入
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions()
+    static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions()
     {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions = {};
+        std::array<VkVertexInputAttributeDescription, 4> attributeDescriptions = {};
 
         attributeDescriptions[0].binding = 0; // binding参数告诉了Vulkan每个顶点数据的来源
         attributeDescriptions[0].location = 0;// location参数引用了vertex shader作为输入的location指令.顶点着色器中,location为0代表position,它是32bit单精度数据
@@ -242,12 +243,17 @@ struct Vertex
         attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
 
+        attributeDescriptions[3].binding = 0;
+        attributeDescriptions[3].location = 3;
+        attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[3].offset = offsetof(Vertex, normal);
+
         return attributeDescriptions;
     }
 
     bool operator==(const Vertex& other) const
     {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
+        return pos == other.pos && color == other.color && texCoord == other.texCoord && normal == other.normal;
     }
 };
 
@@ -258,7 +264,7 @@ namespace std
     {
         size_t operator()(Vertex const& vertex) const
         {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1);
+            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ (hash<glm::vec3>()(vertex.normal) << 1);
         }
     };
 }
@@ -269,6 +275,7 @@ struct UniformBufferObject
     glm::mat4 model;  // 模型矩阵 模型在空间中的位置
     glm::mat4 view;   // 视口矩阵 记录摄像机位置
     glm::mat4 proj;   // 投影矩阵 根据物体离摄像机的远近 放缩模型
+    glm::vec3 testlight; //加一个灯光
 };
 
 // 管线类
@@ -954,14 +961,14 @@ private:
         // 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        //inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // 图元的拓扑结构类型
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // 画球
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // 图元的拓扑结构类型
+        //inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // 画球
         /*
         VK_PRIMITIVE_TOPOLOGY_POINT_LIST: 顶点到点
         VK_PRIMITIVE_TOPOLOGY_LINE_LIST: 两点成线,顶点不共用
         VK_PRIMITIVE_TOPOLOGY_LINE_STRIP: 两点成线,每个线段的结束顶点作为下一个线段的开始顶点
         VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST: 三点成面,顶点不共用
-        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP: 每个但教训的第二个、第三个顶点都作为下一个三角形的前两个顶点
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP: 每个三角形的第二个、第三个顶点都作为下一个三角形的前两个顶点
         */
         // 顶点数据按照缓冲区中的序列作为索引,但是也可以通过element buffer缓冲区自行指定顶点数据的索引.通过复用顶点数据提升性能.
         // 如果设置primitiveRestartEnable成员为VK_TRUE,可以通过0xFFFF或者0xFFFFFFFF作为特殊索引来分解线和三角形在_STRIP模式下的图元拓扑结构.
@@ -1582,17 +1589,19 @@ private:
     {
         float M_PI = 3.1415926536;
         float R = 0.7f;//球的半径
-        int statck = 15;//statck：切片----把球体横向切成几部分
+        int statck = 20;//statck：切片----把球体横向切成几部分
         float statckStep = (float)(M_PI / statck);//单位角度值
-        int slice = 50;//纵向切几部分
+        int slice = 30;//纵向切几部分
         float sliceStep = (float)(M_PI / slice);//水平圆递增的角度
 
         float r0, r1, x0, x1, y0, y1, z0, z1; //r0、r1为圆心引向两个临近切片部分表面的两条线 (x0,y0,z0)和(x1,y1,z1)为临近两个切面的点。
         float alpha0 = 0, alpha1 = 0; //前后两个角度
         float beta = 0; //切片平面上的角度
         std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
+        std::vector<Vertex> allvertices;
         //外层循环
-        for (int i = 0; i < statck; i++) {
+        for (int i = 0; i < statck; i++) 
+        {
             alpha0 = (float)(-M_PI / 2 + (i * statckStep));
             alpha1 = (float)(-M_PI / 2 + ((i + 1) * statckStep));
             y0 = (float)(R * std::sin(alpha0));
@@ -1616,11 +1625,11 @@ private:
 
                 if (uniqueVertices.count(vertex) == 0)
                 {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
+                    uniqueVertices[vertex] = static_cast<uint32_t>(allvertices.size());
+                    allvertices.push_back(vertex);
                 }
 
-                indices.push_back(uniqueVertices[vertex]);
+                //indices.push_back(uniqueVertices[vertex]);
 
                 Vertex vertex1 = {};
                 vertex1.pos = { x1, y1, z1 };
@@ -1629,13 +1638,106 @@ private:
 
                 if (uniqueVertices.count(vertex1) == 0)
                 {
-                    uniqueVertices[vertex1] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex1);
+                    uniqueVertices[vertex1] = static_cast<uint32_t>(allvertices.size());
+                    allvertices.push_back(vertex1);
                 }
 
-                indices.push_back(uniqueVertices[vertex1]);
+                //indices.push_back(uniqueVertices[vertex1]);
             }
         }
+
+        std::unordered_map<Vertex, uint32_t> uniqueVerticesall = {};
+        // 给球拆成3个顶点一组并给每个顶点加Normal(本来是每个三角形的后两点和下一个三角形的前两点共点，改为不共点，因为要计算每个点的normal)
+        for (size_t i = 2; i < allvertices.size(); i++)
+        {
+            Vertex vertex0 = {};
+            vertex0.pos = allvertices[i - 2].pos;
+            vertex0.texCoord = allvertices[i - 2].texCoord;
+            vertex0.color = allvertices[i - 2].color;
+
+            Vertex vertex1 = {};
+            vertex1.pos = allvertices[i - 1].pos;
+            vertex1.texCoord = allvertices[i - 1].texCoord;
+            vertex1.color = allvertices[i - 1].color;
+
+            Vertex vertex2 = {};
+            vertex2.pos = allvertices[i].pos;
+            vertex2.texCoord = allvertices[i].texCoord;
+            vertex2.color = allvertices[i].color;
+
+            // 求这个面的法线
+            glm::vec3 vec1 = vertex0.pos - vertex1.pos;
+            glm::vec3 vec2 = vertex0.pos - vertex2.pos;
+            glm::vec3 normal = glm::normalize(glm::cross(vec1, vec2));
+            vertex0.normal = normal;
+            vertex1.normal = normal;
+            vertex2.normal = normal;
+
+            if (i % 2 == 0)
+            {
+                // 求这个面的法线
+                glm::vec3 vec1 = vertex0.pos - vertex1.pos;
+                glm::vec3 vec2 = vertex0.pos - vertex2.pos;
+                glm::vec3 normal = glm::normalize(glm::cross(vec1, vec2));
+                vertex0.normal = normal;
+                vertex1.normal = normal;
+                vertex2.normal = normal;
+
+                if (uniqueVerticesall.count(vertex0) == 0)
+                {
+                    uniqueVerticesall[vertex0] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex0);
+                }
+                indices.push_back(uniqueVerticesall[vertex0]);
+
+                if (uniqueVerticesall.count(vertex1) == 0)
+                {
+                    uniqueVerticesall[vertex1] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex1);
+                }
+                indices.push_back(uniqueVerticesall[vertex1]);
+
+                if (uniqueVerticesall.count(vertex2) == 0)
+                {
+                    uniqueVerticesall[vertex2] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex2);
+                }
+                indices.push_back(uniqueVerticesall[vertex2]);
+
+            }
+            else
+            {
+                // 求这个面的法线
+                glm::vec3 vec1 = vertex0.pos - vertex1.pos;
+                glm::vec3 vec2 = vertex0.pos - vertex2.pos;
+                glm::vec3 normal = glm::normalize(glm::cross(vec1, -vec2));
+                vertex0.normal = normal;
+                vertex1.normal = normal;
+                vertex2.normal = normal;
+
+                if (uniqueVerticesall.count(vertex2) == 0)
+                {
+                    uniqueVerticesall[vertex2] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex2);
+                }
+                indices.push_back(uniqueVerticesall[vertex2]);
+
+                if (uniqueVerticesall.count(vertex1) == 0)
+                {
+                    uniqueVerticesall[vertex1] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex1);
+                }
+                indices.push_back(uniqueVerticesall[vertex1]);
+
+                if (uniqueVerticesall.count(vertex0) == 0)
+                {
+                    uniqueVerticesall[vertex0] = static_cast<uint32_t>(vertices.size());
+                    vertices.push_back(vertex0);
+                }
+                indices.push_back(uniqueVerticesall[vertex0]);
+            }
+        }
+
     }
 
     // 创建顶点缓冲区
@@ -2007,10 +2109,13 @@ private:
         position = glm::vec3(position.x, position.y * std::cos(-speed * i_ypos) - position.z * std::sin(-speed * i_ypos), position.y * std::sin(-speed * i_ypos) + position.z * std::cos(-speed * i_ypos));
 
         UniformBufferObject ubo = {};
-        ubo.view = glm::lookAt(position, centre, up); // 摄像机位置/中心位置/上下仰角 
+        ubo.view = glm::lookAt(position, centre, up); // 摄像机位置/中心位置/上下仰角
         // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度.
         ubo.proj = glm::perspective(glm::radians(FoV), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置.
+
+        // 加一个测试用的点光
+        ubo.testlight = glm::vec3(10.f, 10.f, 10.f);
 
         // 现在定义了所有的变换,所以将UBO中的数据复制到uniform缓冲区.除了没有暂存缓冲区,这与顶点缓冲区的操作完全相同.
         // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式.相比传递一个更小的数据缓冲区到着色器中,更有效的方式是使用常量.
