@@ -918,8 +918,8 @@ private:
     void createGraphicsPipeline()
     {
         // 加载顶点shader和片元shader
-        auto vertShaderCode = readFile("../resources/shaders/vert.spv");// vertex shader
-        auto fragShaderCode = readFile("../resources/shaders/frag.spv");// fragment shader
+        auto vertShaderCode = readFile("../shaders/shader.vert.spv");
+        auto fragShaderCode = readFile("../shaders/shader.frag.spv");
 
         // 在将代码传递给渲染管线之前,我们必须将其封装到VkShaderModule对象中
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
