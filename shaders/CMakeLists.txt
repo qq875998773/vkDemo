@@ -9,6 +9,7 @@ message(${GLSL_VALIDATOR})
 file(GLOB_RECURSE SHADER_SRC
     "*.frag"
     "*.vert"
+	"*.geom"
 )
 
 foreach(SHADER ${SHADER_SRC})

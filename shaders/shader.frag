@@ -25,5 +25,5 @@ void main() {
 	vec4 light = vec4(ambient+diffuse,1.0);
 	
 	vec4 bleColor = vec4(fragColor,1.0); // 输入颜色
-    outColor = texture(texSampler, fragTexCoord)*bleColor*light; // 纹理颜色x输入颜色x光照
+    outColor = texture(texSampler, fragTexCoord)*bleColor/**light*/; // 纹理颜色x输入颜色x光照
 }

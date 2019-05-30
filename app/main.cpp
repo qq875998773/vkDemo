@@ -24,7 +24,7 @@
 #include <array>
 #include <set>
 #include <unordered_map>
-// #include "vulkan/vulkan.hpp" // 面向对象调用方式
+#include "vulkan/vulkan.hpp" // 面向对象调用方式
 
 
 const int WIDTH = 1280; // 窗体宽
@@ -36,11 +36,12 @@ const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片
 #pragma region 鼠标键盘操作
 bool     g_is_left_pressed = false; // 键盘A
 bool     g_is_right_pressed = false;// 键盘D
-bool     g_is_fwd_pressed = false;// 键盘W
-bool     g_is_back_pressed = false;// 键盘S
+bool     g_is_fwd_pressed = false;  // 键盘W
+bool     g_is_back_pressed = false; // 键盘S
 bool     g_is_mouse_tracking = false;
 //bool     g_is_double_click = false; // 鼠标双击
 bool     g_is_middle_pressed = false; // 鼠标中键
+bool     g_is_scroll_delta = false;
 glm::vec2   g_mouse_pos = glm::vec2(0.f, 0.f);
 glm::vec2   g_mouse_delta = glm::vec2(0.f, 0.f); // 鼠标右键拖动
 glm::vec2   g_scroll_delta = glm::vec2(0.f, 0.f); // 鼠标滚动
@@ -59,6 +60,7 @@ void OnMouseMove(GLFWwindow* window, double x, double y)
 void OnMouseScroll(GLFWwindow* window, double x, double y)
 {
     g_scroll_delta = glm::vec2((float)x, (float)y);
+    g_is_scroll_delta = true;
 }
 
 // 鼠标按键
@@ -210,7 +212,7 @@ struct Vertex
     {
         VkVertexInputBindingDescription bindingDescription = {};
         bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.stride = sizeof(Vertex); // 步幅
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;// 移动到每个顶点后的下一个数据条目
         /*
         inputRate参数可以具备一下值之一：
@@ -318,6 +320,8 @@ private:
     VkDescriptorSetLayout descriptorSetLayout; // 描述符集布局
     VkPipelineLayout pipelineLayout; // 管线布局
     VkPipeline graphicsPipeline; // 绘制管线
+    VkPipeline normalPipeline; // 法线管线
+
 
     VkCommandPool commandPool; // 命令池
 
@@ -428,6 +432,7 @@ private:
         vkFreeCommandBuffers(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         vkDestroyPipeline(device, graphicsPipeline, nullptr); // 清除图形管线
+        vkDestroyPipeline(device, normalPipeline, nullptr); // 清除法线管线
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr); // 销毁pipeline layout
         vkDestroyRenderPass(device, renderPass, nullptr); // 销毁渲染通道,渲染通道在整个程序生命周期内都被使用,所以需要在退出阶段进行清理
 
@@ -917,14 +922,14 @@ private:
     // 创建图形管线
     void createGraphicsPipeline()
     {
-        // 加载顶点shader和片元shader
+        // 加载顶点shader和片元shader和几何shader
         auto vertShaderCode = readFile("../shaders/shader.vert.spv");// vertex shader
         auto fragShaderCode = readFile("../shaders/shader.frag.spv");// fragment shader
 
         // 在将代码传递给渲染管线之前,我们必须将其封装到VkShaderModule对象中
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
-
+        
         // 将着色器模块分配到管线中的顶点着色器阶段
         VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -956,11 +961,12 @@ private:
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // 指向结构体数组,用于进一步描述加载的顶点数据信息
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // 指向结构体数组,用于进一步描述加载的顶点数据信息
 
-        // 
+        // 输入装配
+        // 收集最原始的顶点数据，并且还可以使用索引缓冲区复用这些数据元素，而不必复制冗余的顶点数据副本
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // 图元的拓扑结构类型
-        //inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // 画球
+        //inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; 
         /*
         VK_PRIMITIVE_TOPOLOGY_POINT_LIST: 顶点到点
         VK_PRIMITIVE_TOPOLOGY_LINE_LIST: 两点成线,顶点不共用
@@ -986,7 +992,7 @@ private:
         scissor.offset = { 0, 0 };
         scissor.extent = swapChainExtent;
 
-        // 视口声明
+        // 视口状态
         VkPipelineViewportStateCreateInfo viewportState = {};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportState.viewportCount = 1;
@@ -1003,8 +1009,8 @@ private:
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE; // 超过远近裁剪面的片元会进行收敛,而不是丢弃它们.它在特殊的情况下比较有用,像阴影贴图.使用该功能需要得到GPU的支持,深度测试
         rasterizer.rasterizerDiscardEnable = VK_FALSE; // 设置为VK_TRUE,那么几何图元永远不会传递到光栅化阶段.这是基本的禁止任何输出到framebuffer帧缓冲区的方法
-        rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // polygonMode决定几何产生图片的内容,填充
-        //rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // 线框绘制
+        //rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // polygonMode决定几何产生图片的内容,填充
+        rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // 线框绘制
         /*
         VK_POLYGON_MODE_FILL: 多边形区域填充
         VK_POLYGON_MODE_LINE: 多边形边缘线框绘制
@@ -1023,7 +1029,7 @@ private:
         multisampling.sampleShadingEnable = VK_FALSE;
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-        // 深度缓冲区
+        // 深度模板状态
         VkPipelineDepthStencilStateCreateInfo depthStencil = {};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = VK_TRUE;// 指定是否应该将新的深度缓冲区与深度缓冲区进行比较,以确认是否应该被丢弃
@@ -1075,18 +1081,18 @@ private:
         // 渲染管线初始化 这个结构体填充上面的所有准备数据
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = &depthStencil;
-        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.stageCount = 2; // 脚本数量  
+        pipelineInfo.pStages = shaderStages;               // 着色器
+        pipelineInfo.pVertexInputState = &vertexInputInfo; // 顶点描述
+        pipelineInfo.pInputAssemblyState = &inputAssembly; // 输入装配
+        pipelineInfo.pViewportState = &viewportState;      // 视口状态
+        pipelineInfo.pRasterizationState = &rasterizer;    // 光栅化状态
+        pipelineInfo.pMultisampleState = &multisampling;   // 多重采样抗锯齿
+        pipelineInfo.pDepthStencilState = &depthStencil;   // 深度模板状态
+        pipelineInfo.pColorBlendState = &colorBlending;    // 混色
         pipelineInfo.layout = pipelineLayout; // 管线布局赋给管线初始化布局属性
         pipelineInfo.renderPass = renderPass; // 渲染通道
-        pipelineInfo.subpass = 0;
+        pipelineInfo.subpass = 0; // 子渲染通道
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
         // 创建图形管线
@@ -1095,8 +1101,58 @@ private:
             throw std::runtime_error("failed to create graphics pipeline!");
         }
 
+        // --------------------------------------------------------------------------------------------------------------------------start
+        // 如果想加入别的shader 只需要重新给pipelineInfo.stageCount和 pipelineInfo.pStages = shaderStages;赋值 再创建一次图形管线即可
+
+        // 创建法线shader集合
+        auto normalvertShaderCode = readFile("../shaders/normaldebug.vert.spv");// vertex shader
+        auto normalfragShaderCode = readFile("../shaders/normaldebug.frag.spv");// fragment shader
+        auto normalgeomShaderCode = readFile("../shaders/normaldebug.geom.spv");// geometry shader
+
+        // 在将代码传递给渲染管线之前,我们必须将其封装到VkShaderModule对象中
+        VkShaderModule normalvertShaderModule = createShaderModule(normalvertShaderCode);
+        VkShaderModule normalfragShaderModule = createShaderModule(normalfragShaderCode);
+        VkShaderModule normalgeomShaderModule = createShaderModule(normalgeomShaderCode);
+
+        // 将着色器模块分配到管线中的顶点着色器阶段
+        VkPipelineShaderStageCreateInfo normalvertShaderStageInfo = {};
+        normalvertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        normalvertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT; // 状态
+        normalvertShaderStageInfo.module = normalvertShaderModule;
+        normalvertShaderStageInfo.pName = "main";
+
+        // 将着色器模块分配到管线中的片段着色器阶段
+        VkPipelineShaderStageCreateInfo normalfragShaderStageInfo = {};
+        normalfragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        normalfragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        normalfragShaderStageInfo.module = normalfragShaderModule;
+        normalfragShaderStageInfo.pName = "main";
+
+        // 几何着色器
+        VkPipelineShaderStageCreateInfo normalgeomShaderStageInfo = {};
+        normalgeomShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        normalgeomShaderStageInfo.stage = VK_SHADER_STAGE_GEOMETRY_BIT;
+        normalgeomShaderStageInfo.module = normalgeomShaderModule;
+        normalgeomShaderStageInfo.pName = "main";
+
+        // 完成两个结构体的创建,并通过数组保存,这部分引用将会在实际的管线创建开始
+        VkPipelineShaderStageCreateInfo normalshaderStages[] = { normalvertShaderStageInfo, normalgeomShaderStageInfo, normalfragShaderStageInfo };
+
+        pipelineInfo.stageCount = 3; // 脚本数量
+        pipelineInfo.pStages = normalshaderStages; // 着色器
+
+        // 创建法线管线
+        if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &normalPipeline) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create graphics pipeline!");
+        }
+        // ----------------------------------------------------------------------------------------------------------------------------end
+
         vkDestroyShaderModule(device, fragShaderModule, nullptr); // 清除frag shader module
         vkDestroyShaderModule(device, vertShaderModule, nullptr); // 清除vert shader module
+        vkDestroyShaderModule(device, normalgeomShaderModule, nullptr); // 清除geom shader module
+        vkDestroyShaderModule(device, normalvertShaderModule, nullptr); 
+        vkDestroyShaderModule(device, normalfragShaderModule, nullptr); 
     }
 
     // 帧缓冲区
@@ -1587,9 +1643,9 @@ private:
     {
         float M_PI = 3.14159265359;
         float R = 0.7f;//球的半径
-        int statck = 100;//statck：切片----把球体横向切成几部分
+        int statck = 30;//statck：切片----把球体横向切成几部分
         float statckStep = (float)(M_PI / statck);//单位角度值
-        int slice = 300;//纵向切几部分
+        int slice = 50;//纵向切几部分
         float sliceStep = (float)(M_PI / slice);//水平圆递增的角度
 
         float r0, r1, x0, x1, y0, y1, z0, z1; //r0、r1为圆心引向两个临近切片部分表面的两条线 (x0,y0,z0)和(x1,y1,z1)为临近两个切面的点。
@@ -2040,9 +2096,6 @@ private:
                 VK_SUBPASS_CONTENTS_SECONDARY_COOMAND_BUFFERS: 渲染通道命令将会从辅助命令缓冲区执行.
             */
 
-            // 绑定图形管线 第一个参数 记录该命令的命令缓冲区,第二个参数指定具体管线类型,第三个参数graphics 或者 compute pipeline.
-            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
-
             VkBuffer vertexBuffers[] = { vertexBuffer };
             VkDeviceSize offsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);// 用于绑定顶点缓冲区,就像之前的设置一样,除了命令缓冲区之外,前两个参数指定了我们要为其指定的顶点缓冲区的偏移量和数量,后两个参数指定了将要绑定的顶点缓冲区的数组及开始读取数据的起始偏移量
@@ -2052,9 +2105,15 @@ private:
             // 将描述符集合绑定到实际的着色器的描述符中
             vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSet, 0, nullptr);
 
+            // 绑定图形管线 第一个参数 记录该命令的命令缓冲区,第二个参数指定具体管线类型,第三个参数graphics 或者 compute pipeline.
+            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
             // 前两个参数指定索引的数量和几何instance数量.没有使用instancing,所以指定1.
             // 索引数表示被传递到顶点缓冲区中的顶点数量.下一个参数指定索引缓冲区的偏移量,使用1将会导致图形卡在第二个索引处开始读取
             // 倒数第二个参数指定索引缓冲区中添加的索引的偏移.最后一个参数指定instancing偏移量,我们没有使用该特性
+            vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+            // 法线管线命令绑定
+            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, normalPipeline);
             vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
             // 渲染通道执行完绘制,可以结束渲染作业
@@ -2090,7 +2149,7 @@ private:
         // 初始化摄像机
         static glm::vec3 position = glm::vec3(2.0f, 2.f, 2.f);// 初始摄像机位置
         static glm::vec3 centre = glm::vec3(0.0f, 0.0f, 0.0f); // 模型中心
-        float FoV = 45.0f;
+        static float FoV = 45.0f;
         glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);// 仰角
 
         // 鼠标键盘操作
@@ -2105,13 +2164,18 @@ private:
         float  i_ypos = g_mouse_delta.y;
         position = glm::vec3(position.x * std::cos(speed * i_xpos) - position.y * std::sin(speed * i_xpos), position.x * std::sin(speed * i_xpos) + position.y * std::cos(speed * i_xpos), position.z);
         position = glm::vec3(position.x, position.y * std::cos(-speed * i_ypos) - position.z * std::sin(-speed * i_ypos), position.y * std::sin(-speed * i_ypos) + position.z * std::cos(-speed * i_ypos));
+        if (g_is_scroll_delta && FoV - g_scroll_delta.y * 0.8f > 0.f && FoV - g_scroll_delta.y * 0.8f < 90.f)
+        {
+            FoV = FoV - g_scroll_delta.y * 0.8f;
+            g_is_scroll_delta = false;
+        }
 
         UniformBufferObject ubo = {};
         ubo.view = glm::lookAt(position, centre, up); // 摄像机位置/中心位置/上下仰角
         // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度.
         ubo.proj = glm::perspective(glm::radians(FoV), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置.
-
+        
         // 加一个测试用的点光
         ubo.testlight = glm::vec3(10.f, 10.f, 10.f);
 
@@ -2493,7 +2557,7 @@ private:
     // 读取文件
     static std::vector<char> readFile(const std::string & filename)
     {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        std::ifstream file(filename, std::ios::ate | std::ios::binary); 
 
         if (!file.is_open())
         {
