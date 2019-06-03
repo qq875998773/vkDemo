@@ -39,7 +39,7 @@ bool     g_is_right_pressed = false;// 键盘D
 bool     g_is_fwd_pressed = false;// 键盘W
 bool     g_is_back_pressed = false;// 键盘S
 bool     g_is_mouse_tracking = false;
-//bool     g_is_double_click = false; // 鼠标双击
+bool     g_is_scroll_delta = false; // 鼠标滚动
 bool     g_is_middle_pressed = false; // 鼠标中键
 glm::vec2   g_mouse_pos = glm::vec2(0.f, 0.f);
 glm::vec2   g_mouse_delta = glm::vec2(0.f, 0.f); // 鼠标右键拖动
@@ -59,6 +59,7 @@ void OnMouseMove(GLFWwindow* window, double x, double y)
 void OnMouseScroll(GLFWwindow* window, double x, double y)
 {
     g_scroll_delta = glm::vec2((float)x, (float)y);
+    g_is_scroll_delta = true;
 }
 
 // 鼠标按键
@@ -956,11 +957,10 @@ private:
         vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // 指向结构体数组,用于进一步描述加载的顶点数据信息
         vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data(); // 指向结构体数组,用于进一步描述加载的顶点数据信息
 
-        // 
+        // 输入装配
         VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // 图元的拓扑结构类型
-        //inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; // 画球
         /*
         VK_PRIMITIVE_TOPOLOGY_POINT_LIST: 顶点到点
         VK_PRIMITIVE_TOPOLOGY_LINE_LIST: 两点成线,顶点不共用
@@ -1004,7 +1004,6 @@ private:
         rasterizer.depthClampEnable = VK_FALSE; // 超过远近裁剪面的片元会进行收敛,而不是丢弃它们.它在特殊的情况下比较有用,像阴影贴图.使用该功能需要得到GPU的支持,深度测试
         rasterizer.rasterizerDiscardEnable = VK_FALSE; // 设置为VK_TRUE,那么几何图元永远不会传递到光栅化阶段.这是基本的禁止任何输出到framebuffer帧缓冲区的方法
         rasterizer.polygonMode = VK_POLYGON_MODE_FILL; // polygonMode决定几何产生图片的内容,填充
-        //rasterizer.polygonMode = VK_POLYGON_MODE_LINE; // 线框绘制
         /*
         VK_POLYGON_MODE_FILL: 多边形区域填充
         VK_POLYGON_MODE_LINE: 多边形边缘线框绘制
@@ -2090,7 +2089,7 @@ private:
         // 初始化摄像机
         static glm::vec3 position = glm::vec3(2.0f, 2.f, 2.f);// 初始摄像机位置
         static glm::vec3 centre = glm::vec3(0.0f, 0.0f, 0.0f); // 模型中心
-        float FoV = 45.0f;
+        static float FoV = 45.0f;
         glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);// 仰角
 
         // 鼠标键盘操作
@@ -2100,11 +2099,16 @@ private:
         glfwSetKeyCallback(window, OnKey);
         glfwSetScrollCallback(window, OnMouseScroll);
 
-        double speed = -0.001f;
+        double speed = 0.001f;
         float  i_xpos = g_mouse_delta.x;
         float  i_ypos = g_mouse_delta.y;
-        position = glm::vec3(position.x * std::cos(speed * i_xpos) - position.y * std::sin(speed * i_xpos), position.x * std::sin(speed * i_xpos) + position.y * std::cos(speed * i_xpos), position.z);
-        position = glm::vec3(position.x, position.y * std::cos(-speed * i_ypos) - position.z * std::sin(-speed * i_ypos), position.y * std::sin(-speed * i_ypos) + position.z * std::cos(-speed * i_ypos));
+        position = glm::vec3(position.x * std::cos(-speed * i_xpos) - position.y * std::sin(-speed * i_xpos), position.x * std::sin(-speed * i_xpos) + position.y * std::cos(-speed * i_xpos), position.z);
+        position = glm::vec3(position.x, position.y * std::cos(speed * i_ypos) - position.z * std::sin(speed * i_ypos), position.y * std::sin(speed * i_ypos) + position.z * std::cos(speed * i_ypos));
+        if (g_is_scroll_delta && FoV - g_scroll_delta.y > 0.f && FoV - g_scroll_delta.y < 90.f)
+        {
+            FoV = FoV - g_scroll_delta.y;
+            g_is_scroll_delta = false;
+        }
 
         UniformBufferObject ubo = {};
         ubo.view = glm::lookAt(position, centre, up); // 摄像机位置/中心位置/上下仰角
