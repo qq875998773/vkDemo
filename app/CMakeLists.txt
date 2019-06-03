@@ -5,7 +5,7 @@ set(APP_SRC
 
 add_executable (vk ${APP_SRC})
 
-target_include_directories(vk PUBLIC "include")
+target_include_directories(vk PUBLIC "include") # 
 target_link_libraries(vk Vulkan::Vulkan glfw3::glfw3)
 add_dependencies(vk Shaders Resources)
 

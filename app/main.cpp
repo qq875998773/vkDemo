@@ -30,8 +30,13 @@
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
 
-const std::string MODEL_PATH = "../resources/models/chalet.obj"; // obj模型路径
+//const std::string MODEL_PATH = "../resources/models/chalet.obj"; // obj模型路径
+//const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
+//const std::string MTL_IMAGE_PATH = "../resources/textures/chalet.mtl"; // 纹理图片配置文件
+
+const std::string MODEL_PATH = "C:/Users/CC/Desktop/hudie/hudie.obj"; // obj模型路径
 const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
+const std::string MTL_IMAGE_PATH = "C:/Users/CC/Desktop/hudie/hudie.mtl"; // 纹理图片配置文件
 
 #pragma region 鼠标键盘操作
 bool     g_is_left_pressed = false; // 键盘A
@@ -379,7 +384,7 @@ private:
         createSwapChain();          // 交换链
         createImageViews();         // 创建图像视图
         createRenderPass();         // 渲染通道
-        createDescriptorSetLayout();// 创建描述符设置布局
+        createDescriptorSetLayout();// 创建描述符设置布局 uniform buffer布局
         createGraphicsPipeline();   // 图形管线
         createCommandPool();        // 创建令缓冲区
         createDepthResources();     // 创建深度图像
@@ -389,12 +394,13 @@ private:
         createTextureSampler();     // 创建配置采样器对象
         //loadModel();                // 加载模型 tinyobjloader库
         //loadModel1();               // 测试三角形
-        loadModel2();               // 画球
+        //loadModel2();               // 画球
+        loadObjModel();             // 加载有多个纹理图片的 obj模型
         createVertexBuffer();       // 创建顶点缓冲区
         createIndexBuffer();        // 创建顶点索引缓冲区
         createUniformBuffer();      // 创建全局缓冲区
         createDescriptorPool();     // 创建描述符集合
-        createDescriptorSet();      // 创建分配描述符集合
+        createDescriptorSet();      // 创建设置unifrom layout binding顺序(shader layout uniform 访问的顺序设置)
         createCommandBuffers();     // 创建命令缓冲区
         createSemaphores();         // 创建信号对象
     }
@@ -417,7 +423,7 @@ private:
     {
         vkDestroyImageView(device, depthImageView, nullptr);
         vkDestroyImage(device, depthImage, nullptr);
-        vkFreeMemory(device, depthImageMemory, nullptr);// 
+        vkFreeMemory(device, depthImageMemory, nullptr);
 
         // 删除帧缓冲区
         for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
@@ -484,7 +490,7 @@ private:
     {
         if (width == 0 || height == 0) return;
 
-        Application * app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+        Application* app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
         app->recreateSwapChain(); // 重新创建交换链
     }
 
@@ -882,7 +888,7 @@ private:
         }
     }
 
-    // 创建描述符设置布局
+    // 创建描述符设置布局 为uniform buffer指定顺序 ubo为0位 texture为1位
     void createDescriptorSetLayout()
     {// 需要在管线创建时,为着色器提供关于每个描述符绑定的详细信息,就像为每个顶点属性和location索引做的一样.
      // 添加一个新的函数来定义所有这些名为createDescritorSetLayout的信息.考虑到会在管线中使用,它应该在管线创建函数之前调用
@@ -1174,7 +1180,7 @@ private:
     }
 
     // 候选格式列表中 根据期望值的降序原则,检测第一个得到支持的格式
-    VkFormat findSupportedFormat(const std::vector<VkFormat> & candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+    VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
     {
         for (VkFormat format : candidates)
         {
@@ -1321,7 +1327,7 @@ private:
     }
 
     // 创建贴图图像
-    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage & image, VkDeviceMemory & imageMemory)
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
     {
         // 图片初始化
         VkImageCreateInfo imageInfo = {};
@@ -1550,6 +1556,77 @@ private:
 
                 // 把这个顶点索引提交给顶点索引集合
                 indices.push_back(uniqueVertices[vertex]);
+            }
+        }
+    }
+
+    // 加载obj模型
+    void loadObjModel()
+    {
+        using namespace tinyobj;
+
+        // loader data
+        attrib_t attrib;
+        std::vector<shape_t> objshapes;
+        std::vector<material_t> objmaterials;
+
+        // try loading file
+        std::string err;
+        auto res = LoadObj(&attrib, &objshapes, &objmaterials, &err, MODEL_PATH.c_str(), MTL_IMAGE_PATH.c_str());
+        if (!res)
+        {
+            throw std::runtime_error(err);
+        }
+
+        // enumerate all shapes in the scene
+        for (int s = 0; s < (int)objshapes.size(); ++s)
+        {
+            const auto& shape = objshapes[s];
+
+            // find all materials used by this shape.
+            std::set<int> used_materials(std::begin(shape.mesh.material_ids), std::end(shape.mesh.material_ids));
+
+            // split the mesh into multiple meshes, each with only one material.
+            for (int used_material : used_materials)
+            {
+                // map from old index to new index.
+                std::map<unsigned int, unsigned int> used_indices;
+
+                // remapped indices.
+                std::vector<unsigned int> indices;
+
+                // collected vertex/normal/texcoord data.
+                std::vector<float> vertices, normals, texcoords;
+
+                // go through each face in the mesh.
+                for (size_t i = 0; i < shape.mesh.material_ids.size(); ++i)
+                {
+                    // skip faces which don't use the current material.
+                    if (shape.mesh.material_ids[i] != used_material) continue;
+
+                    const int num_face_vertices = shape.mesh.num_face_vertices[i];
+                    assert(num_face_vertices == 3 && "expected triangles");
+                    // for each vertex index of this face.
+                    for (int j = 0; j < num_face_vertices; ++j)
+                    {
+                        const unsigned int old_index = shape.mesh.indices[num_face_vertices * i + j].vertex_index;
+                        // collect vertex/normal/texcoord data. avoid inserting the same data twice.
+                        auto result = used_indices.emplace(old_index, (unsigned int)(vertices.size() / 3));
+                        if (result.second) // did insert?
+                        {
+                            // push the new data.
+                            for (int k = 0; k < 3; ++k)
+                                vertices.push_back(attrib.vertices[3 * old_index + k]);
+                            for (int k = 0; k < 3; ++k)
+                                normals.push_back(attrib.normals[3 * old_index + k]);
+                            if (!attrib.texcoords.empty())
+                                for (int k = 0; k < 2; ++k)
+                                    texcoords.push_back(attrib.texcoords[2 * old_index + k]);
+                        }
+                        const unsigned int new_index = result.first->second;
+                        indices.push_back(new_index);
+                    }
+                }
             }
         }
     }
@@ -1814,7 +1891,7 @@ private:
         }
     }
 
-    // 创建分配描述符集合
+    // 创建设置unifrom layout顺序
     void createDescriptorSet()
     {
         // 存储描述符集合的句柄
@@ -1855,7 +1932,7 @@ private:
 
         descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[1].dstSet = descriptorSet;
-        descriptorWrites[1].dstBinding = 1;
+        descriptorWrites[1].dstBinding = 1; // ubiform layout binding = 1,
         descriptorWrites[1].dstArrayElement = 0;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = 1;
@@ -1866,7 +1943,7 @@ private:
     }
 
     // 创建缓冲区
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer & buffer, VkDeviceMemory & bufferMemory)
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
     {
         // 创建buffer初始化
         VkBufferCreateInfo bufferInfo = {};
@@ -2207,7 +2284,7 @@ private:
 
     // 在将代码传递给渲染管线之前,必须将其封装到VkShaderModule对象中
     // 创建一个辅助函数createShaderModule实现该逻辑
-    VkShaderModule createShaderModule(const std::vector<char> & code)
+    VkShaderModule createShaderModule(const std::vector<char>& code)
     {
         VkShaderModuleCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -2225,7 +2302,7 @@ private:
     }
 
     // 选择交换链表面格式
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> & availableFormats)
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
     {
         // 最理想的情况是surface没有设置任何偏向性的格式,
         // 这个时候Vulkan会通过仅返回一个VkSurfaceFormatKHR结构表示,
@@ -2280,7 +2357,7 @@ private:
     }
 
     // 交换范围 指交换链图像的分辨率
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR & capabilities)
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     {
         // 分辨率的范围被定义在VkSurfaceCapabilitiesKHR结构体中
         // Vulkan告诉我们通过设置currentExtent成员的width和height来匹配窗体的分辨率
@@ -2367,7 +2444,7 @@ private:
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
         // 尝试查询交换链的支持是在验证完扩展有效性之后进行
-        return indices.isComplete() && extensionsSupported&& supportedFeatures.samplerAnisotropy;
+        return indices.isComplete() && extensionsSupported && supportedFeatures.samplerAnisotropy;
     }
 
     // 额外的检查逻辑
@@ -2495,7 +2572,7 @@ private:
     }
 
     // 读取文件
-    static std::vector<char> readFile(const std::string & filename)
+    static std::vector<char> readFile(const std::string& filename)
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
@@ -2533,7 +2610,7 @@ int main()
     {
         app.run();
     }
-    catch (const std::runtime_error & e)
+    catch (const std::runtime_error& e)
     {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
