@@ -30,13 +30,13 @@
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
 
-//const std::string MODEL_PATH = "../resources/models/chalet.obj"; // obj模型路径
-//const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
-//const std::string MTL_IMAGE_PATH = "../resources/textures/chalet.mtl"; // 纹理图片配置文件
-
-const std::string MODEL_PATH = "C:/Users/CC/Desktop/hudie/hudie.obj"; // obj模型路径
+const std::string MODEL_PATH = "../resources/models/chalet.obj"; // obj模型路径
 const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
-const std::string MTL_IMAGE_PATH = "C:/Users/CC/Desktop/hudie/hudie.mtl"; // 纹理图片配置文件
+const std::string MTL_IMAGE_PATH = "../resources/textures/chalet.mtl"; // 纹理图片配置文件
+
+//const std::string MODEL_PATH = "C:/Users/CC/Desktop/hudie/hudie.obj"; // obj模型路径
+//const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
+//const std::string MTL_IMAGE_PATH = "C:/Users/CC/Desktop/hudie/hudie.mtl"; // 纹理图片配置文件
 
 #pragma region 鼠标键盘操作
 bool     g_is_left_pressed = false; // 键盘A
@@ -392,10 +392,10 @@ private:
         createTextureImage();       // 创建加载纹理图片 stb库
         createTextureImageView();   // 创建图像视图访问纹理图像
         createTextureSampler();     // 创建配置采样器对象
-        //loadModel();                // 加载模型 tinyobjloader库
+        loadModel();                // 加载模型 tinyobjloader库
         //loadModel1();               // 测试三角形
         //loadModel2();               // 画球
-        loadObjModel();             // 加载有多个纹理图片的 obj模型
+        //loadObjModel();             // 加载有多个纹理图片的 obj模型
         createVertexBuffer();       // 创建顶点缓冲区
         createIndexBuffer();        // 创建顶点索引缓冲区
         createUniformBuffer();      // 创建全局缓冲区
@@ -1028,7 +1028,7 @@ private:
         multisampling.sampleShadingEnable = VK_FALSE;
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-        // 深度缓冲区
+        // 深度模板
         VkPipelineDepthStencilStateCreateInfo depthStencil = {};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = VK_TRUE;// 指定是否应该将新的深度缓冲区与深度缓冲区进行比较,以确认是否应该被丢弃
@@ -1043,6 +1043,7 @@ private:
         // 第二个结构体VkPipelineColorBlendStateCreateInfo包含了全局混色的设置
 
         // 混色
+        // 颜色混合附件
         // 每个附加到帧缓冲区的配置
         VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;// 掩码会用确定帧缓冲区中具体哪个通道的颜色受到影响
@@ -1091,8 +1092,8 @@ private:
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.layout = pipelineLayout; // 管线布局赋给管线初始化布局属性
         pipelineInfo.renderPass = renderPass; // 渲染通道
-        pipelineInfo.subpass = 0;
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+        pipelineInfo.subpass = 0;             // 子渲染通道
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // 子渲染通道句柄设空
 
         // 创建图形管线
         if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
@@ -1217,41 +1218,51 @@ private:
     // 创建加载纹理图片
     void createTextureImage()
     {
-        int texWidth, texHeight, texChannels;
-        // STBI_rgb_alpha值强制加载图片的alpha通道,即使它本身没有alpha,但是这样做对于将来加载其他的纹理的一致性非常友好,像素在STBI_rgba_alpha的情况下逐行排列,每个像素4个字节
-        stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);// 使用文件的路径和通道的数量作为参数加载图片
-        VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;// 图片的像素值
+        std::vector<std::string> cubemap_images = {
+            "../resources/textures/chalet.jpg"
+        };
 
-        if (!pixels)
+        // 遍历所有的jpg
+        for (rsize_t i = 0; i < cubemap_images.size(); ++i)
         {
-            throw std::runtime_error("failed to load texture image!");
+
         }
+            int texWidth, texHeight, texChannels;
+            // STBI_rgb_alpha值强制加载图片的alpha通道,即使它本身没有alpha,但是这样做对于将来加载其他的纹理的一致性非常友好,像素在STBI_rgba_alpha的情况下逐行排列,每个像素4个字节
+            stbi_uc* pixels = stbi_load(cubemap_images[0].c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);// 使用文件的路径和通道的数量作为参数加载图片
+            VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;// 图片的像素值
+            
+            if (!pixels)
+            {
+                throw std::runtime_error("failed to load texture image!");
+            }
 
-        // 图片像素缓冲区
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory; // 图片像素存储
-        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+            // 图片像素缓冲区
+            VkBuffer stagingBuffer;
+            VkDeviceMemory stagingBufferMemory; // 图片像素存储
+            createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-        // 直接从库中加载的图片中拷贝像素到缓冲区
-        void* data;
-        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-        memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(device, stagingBufferMemory);
+            // 直接从库中加载的图片中拷贝像素到缓冲区
+            void* data;
+            vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+            memcpy(data, pixels, static_cast<size_t>(imageSize));
+            vkUnmapMemory(device, stagingBufferMemory);
 
-        stbi_image_free(pixels); // 清理原图像的像素数据
+            stbi_image_free(pixels); // 清理原图像的像素数据
 
-        // 创建贴图图像
-        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+            // 创建贴图图像
+            createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
-        // 处理布局变换
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        // 拷贝暂存缓冲区到贴图图像
-        copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        // 变换来准备着色器访问
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            // 处理布局变换
+            transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+            // 拷贝暂存缓冲区到贴图图像
+            copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+            // 变换来准备着色器访问
+            transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);// 清理暂存缓冲区
-        vkFreeMemory(device, stagingBufferMemory, nullptr);// 清理分配的内存
+            vkDestroyBuffer(device, stagingBuffer, nullptr);// 清理暂存缓冲区
+            vkFreeMemory(device, stagingBufferMemory, nullptr);// 清理分配的内存
+
     }
 
     // 创建图像视图访问纹理图像
@@ -1518,7 +1529,7 @@ private:
         std::vector<tinyobj::material_t> materials;
         std::string err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str(), MTL_IMAGE_PATH.c_str()))
         {
             throw std::runtime_error(err);
         }
@@ -1844,7 +1855,7 @@ private:
         // 设置缓冲区大小直接用sizeof
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-        VkBuffer stagingBuffer;
+        VkBuffer stagingBuffer; // 临时缓冲区
         VkDeviceMemory stagingBufferMemory;
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
