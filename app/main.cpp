@@ -311,7 +311,7 @@ private:
     VkDevice device; // 添加一个新的类成员来存储逻辑设备句柄
 
     VkQueue graphicsQueue; // 绘图队列句柄
-    VkQueue presentQueue;  // 演示队列句柄
+    VkQueue presentQueue;  // 当前队列句柄
 
     VkSwapchainKHR swapChain; // 交换链对象
     std::vector<VkImage> swapChainImages; // 交换链图像, 图像被交换链创建,也会在交换链销毁的同时自动清理,所以不需要添加清理代码
@@ -686,7 +686,7 @@ private:
         // 检测每个队列簇中队列的句柄.参数是逻辑设备,队列簇,队列索引和存储获取队列变量句柄的指针
         //因为我们只是从这个队列簇创建一个队列,所以需要使用索引0
         vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
-        // 
+        // 获取当前设备列队
         vkGetDeviceQueue(device, indices.presentFamily, 0, &presentQueue);
     }
 
@@ -1218,18 +1218,18 @@ private:
     // 创建加载纹理图片
     void createTextureImage()
     {
-        std::vector<std::string> cubemap_images = {
+       /* std::vector<std::string> cubemap_images = {
             "../resources/textures/chalet.jpg"
-        };
+        }*/;
 
         // 遍历所有的jpg
-        for (rsize_t i = 0; i < cubemap_images.size(); ++i)
+       /* for (rsize_t i = 0; i < cubemap_images.size(); ++i)
         {
 
-        }
+        }*/
             int texWidth, texHeight, texChannels;
             // STBI_rgb_alpha值强制加载图片的alpha通道,即使它本身没有alpha,但是这样做对于将来加载其他的纹理的一致性非常友好,像素在STBI_rgba_alpha的情况下逐行排列,每个像素4个字节
-            stbi_uc* pixels = stbi_load(cubemap_images[0].c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);// 使用文件的路径和通道的数量作为参数加载图片
+            stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);// 使用文件的路径和通道的数量作为参数加载图片
             VkDeviceSize imageSize = (uint64_t)texWidth * texHeight * 4;// 图片的像素值
             
             if (!pixels)
