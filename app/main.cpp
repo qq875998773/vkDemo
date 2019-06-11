@@ -191,7 +191,7 @@ struct QueueFamilyIndices
 };
 
 // 如果仅仅是为了测试交换链的有效性是远远不够的,因为它还不能很好的与窗体surface兼容
-// 创建交换链同样也需要很多设置,所以我们需要了解一些有关设置的细节
+// 创建交换链同样也需要很多设置,所以需要了解一些有关设置的细节
 // 交换链结构体详细信息
 struct SwapChainSupportDetails
 {
@@ -269,7 +269,8 @@ namespace std
     {
         size_t operator()(Vertex const& vertex) const
         {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1) ^ (hash<glm::vec3>()(vertex.normal) << 1);
+            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ 
+                   (hash<glm::vec2>()(vertex.texCoord) << 1) ^ (hash<glm::vec3>()(vertex.normal) << 1);
         }
     };
 }
@@ -315,7 +316,7 @@ private:
     VkQueue presentQueue;  // 当前队列句柄
 
     VkSwapchainKHR swapChain;                        // 交换链对象
-    std::vector<VkImage> swapChainImages;            // 交换链图像, 图像被交换链创建,也会在交换链销毁的同时自动清理,所以不需要添加清理代码
+    std::vector<VkImage> swapChainImages;            // 交换链图像集, 图像被交换链创建,会在交换链销毁时自动清理,不需要添加清理代码
     VkFormat swapChainImageFormat;                   // 交换链图像格式
     VkExtent2D swapChainExtent;                      // 交换链范围(分辨率)
     std::vector<VkImageView> swapChainImageViews;    // 保存图像视图的句柄集
@@ -622,7 +623,7 @@ private:
     void createLogicalDevice()
     {
         /*
-        我们需要多个VkDeviceQueueCreateInfo结构来创建不同功能的队列.
+        需要多个VkDeviceQueueCreateInfo结构来创建不同功能的队列.
         一个优雅的方式是针对不同功能的队列簇创建一个set集合确保队列簇的唯一性
         */
 
@@ -1028,11 +1029,11 @@ private:
         VK_POLYGON_MODE_LINE: 多边形边缘线框绘制
         VK_POLYGON_MODE_POINT: 多边形顶点作为描点绘制
         */
-        //使用任何模式填充都需要开启GPU功能,lineWidth成员是直接填充的,根据片元的数量描述线的宽度.最大的线宽支持取决于硬件,任何大于1.0的线宽需要开启GPU的wideLines特性支持
+        //使用任何模式填充都需开启GPU功能,lineWidth成员是直接填充的,根据片元的数量描述线的宽度.最大的线宽支持取决于硬件,任何大于1.0的线宽需要开启GPU的wideLines特性支持
         rasterizer.lineWidth = 1.0f; 
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // cullMode变量用于决定面裁剪的类型方式.可以禁止culling,裁剪front faces,cull back faces 或者全部
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // frontFace用于描述作为front-facing面的顶点的顺序,可以是顺时针也可以是逆时针
-        rasterizer.depthBiasEnable = VK_FALSE;  // 光栅化可以通过添加常量或者基于片元的斜率来更改深度值.一些时候对于阴影贴图是有用的,这里不使用,所以设置depthBiasEnable为VK_FALSE
+        rasterizer.depthBiasEnable = VK_FALSE;  // 光栅器可以通过添加常量或者基于片元的斜率来更改深度值.有时对于阴影贴图是有用的,这里不使用,所以设置为VK_FALSE
 
         // 它通过组合多个多边形的片段着色器结果,光栅化到同一个像素.这主要发生在边缘,这也是最引人注目的锯齿出现的地方.
         // 如果只有一个多边形映射到像素是不需要多次运行片段着色器进行采样的,相比高分辨率来说,它会花费较低的开销.开启该功能需要GPU支持
@@ -1046,7 +1047,7 @@ private:
         VkPipelineDepthStencilStateCreateInfo depthStencil = {};
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = VK_TRUE;// 指定是否应该将新的深度缓冲区与深度缓冲区进行比较,以确认是否应该被丢弃
-        // 指定通过深度测试的新的片段深度是否应该被实际写入深度缓冲区.这在绘制透明对象的时候非常有用.它们应该与之前渲染的不透明对象进行比较,但不会导致更远的透明对象不被绘制
+        // 指定通过深度测试的新的片段深度是否应该被实际写入深度缓冲区.这在绘制透明对象时非常有用.它们应该与之前渲染的不透明对象进行比较,但不会导致更远的透明对象不被绘制
         depthStencil.depthWriteEnable = VK_TRUE;
         depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;// 指定执行保留或者丢弃片段的比较细节.坚持深度值较低的惯例,它意味着更近.所以新的片段的深度应该更小
         depthStencil.depthBoundsTestEnable = VK_FALSE;
@@ -1062,7 +1063,7 @@ private:
         VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
         // 掩码会用确定帧缓冲区中具体哪个通道的颜色受到影响
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        // 如果blendEnable设为VK_FALSE,那么从片段着色器输出的新颜色不会发生变化,否则两个混色操作会计算新的颜色.所得到的结果与colorWriteMask进行AND运算,以确定实际传递的通道
+        // 如果设为VK_FALSE,那么从片段着色器输出的新颜色不会发生变化,否则两个混色操作会计算新的颜色.所得到的结果与colorWriteMask进行AND运算,以确定实际传递的通道
         colorBlendAttachment.blendEnable = VK_FALSE; 
         // blendEnable,大多数的情况下使用混色用于实现alpha blending,新的颜色与旧的颜色进行混合会基于它们的opacity透明通道.finalColor作为最终的输出
 
@@ -1159,7 +1160,7 @@ private:
     // 创建令缓冲区
     void createCommandPool()
     {
-        // 命令缓冲区通过将其提交到其中一个设备队列上来执行,如我们检索的graphics和presentation队列
+        // 命令缓冲区通过将其提交到其中一个设备队列上来执行,如检索的graphics和presentation队列
         // 每个命令对象池只能分配在单一类型的队列上提交的命令缓冲区,也就是要分配的命令需要与队列类型一致,需要记录绘制的命令,这就说明为什么要选择图形队列簇的原因
         QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
@@ -1187,7 +1188,7 @@ private:
         // 深度图像视图
         depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
-        // 未定义的布局可以作为初始布局,因为深度图像内容无关紧要.我们需要在 transitionImageLayout 中更新一些逻辑使用正确的子资源
+        // 未定义的布局可以作为初始布局,因为深度图像内容无关紧要.需要在 transitionImageLayout 中更新一些逻辑使用正确的子资源
         transitionImageLayout(depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
 
@@ -1270,7 +1271,7 @@ private:
         // 变换来准备着色器访问
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr);// 清理暂存缓冲区
+        vkDestroyBuffer(device, stagingBuffer, nullptr);   // 清理暂存缓冲区
         vkFreeMemory(device, stagingBufferMemory, nullptr);// 清理分配的内存
 
     }
@@ -1359,7 +1360,7 @@ private:
         // 图片初始化
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        // imageType字段指定图像类型,告知Vulkan采用什么样的坐标系在图像中采集纹素.它可以是1D,2D和3D图像.1D图像用于存储数组数据或者灰度图,2D图像主要用于纹理贴图,3D图像用于存储立体纹素
+        // 指定图像类型,告知Vulkan采用什么样的坐标系在图像中采集纹素.它可以是1D,2D和3D图像.1D图像用于存储数组数据或者灰度图,2D图像主要用于纹理贴图,3D图像用于存储立体纹素
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
         imageInfo.extent.width = width;
         imageInfo.extent.height = height;
@@ -1383,7 +1384,7 @@ private:
             VK_IMAGE_LAYOUT_PREINITIALIZED: GPU不能使用,但是第一次变换将会保存纹素.
         */
 
-        // 图像将会被用作缓冲区拷贝的目标,所以应该设置作为传输目的地.我们还希望从着色器中访问图像对我们的mesh进行着色,因此具体的usage还要包括VK_IMAGE_USAGE_SAMPLED_BIT
+        // 图像将会被用作缓冲区拷贝的目标,所以应该设置作为传输目的地.还希望从着色器中访问图像对mesh进行着色,因此具体的usage还要包括VK_IMAGE_USAGE_SAMPLED_BIT
         imageInfo.usage = usage;
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;// 多重采样,这里仅仅适用于作为附件的图像,所以坚持一个采样数值
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;// 因为图像会在一个队列簇中使用：支持图形或者传输操作
@@ -1404,7 +1405,7 @@ private:
 
         // 在真实的生产环境中的应用程序里,不建议为每个缓冲区调用vkAllocateMemory分配内存
         // 内存分配的最大数量受到maxMemoryAllocationCount物理设备所限,即使像NVIDIA GTX1080这样的高端硬件上,也只能提供4096的大小
-        // 同一时间,为大量对象分配内存的正确方法是创建一个自定义分配器,通过使用我们在许多函数中用到的偏移量offset,将一个大块的可分配内存区域划分为多个可分配内存块,提供缓冲区使用
+        // 同一时间,为大量对象分配内存的正确方法是创建一个自定义分配器,许多函数中用到的偏移量offset,将一个大块的可分配内存区域划分为多个可分配内存块,提供缓冲区使用
         if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate image memory!");
@@ -1414,14 +1415,14 @@ private:
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
-    // 处理布局变换 管线屏障
+    // 变换图像布局
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout)
     {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
         /*
         通常主流的做法用于处理图像变换是使用 image memory barrier.
-        管线的屏障通常用于访问资源的时候进行同步,也类似缓冲区在读操作之前完成写入操作,也可以用于图像布局的变换以及在使用 VK_SHARING_MODE_EXCLUSIVE 模式情况下,传输队列簇宿主的变换
+        管线的屏障通常用于访问资源时进行同步,也类似缓冲区在读操作之前完成写入操作,也可以用于图像布局的变换以及在使用VK_SHARING_MODE_EXCLUSIVE模式情况下,传输队列簇宿主的变换
         缓冲区有一个等价的 buffer memory barrier
         */
 
@@ -1430,13 +1431,13 @@ private:
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         barrier.oldLayout = oldLayout;
         barrier.newLayout = newLayout;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障,需要设置队列簇的索引.如果不关心,则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障,需要设置队列簇的索引.如果不关心,则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障,需要设置队列簇的索引.如不关心,则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;// 如果针对传输队列簇的宿主使用屏障,需要设置队列簇的索引.如不关心,则必须设置VK_QUEUE_FAMILY_IGNORED(不是默认值)
         barrier.image = image;// 指定受到影响的图像
 
-        // subresourceRange指定受到影响的图像特定区域
         if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
         {
+            // 指定受到影响的图像特定区域
             barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
             // 判断所选择的深度格式是否包含模版组件
@@ -1501,13 +1502,13 @@ private:
         /* vkCmdPipelineBarrier
         所有类型的管线屏障都使用同样的函数提交.命令缓冲区参数后的第一个参数指定管线的哪个阶段,应用屏障同步之前要执行的前置操作
         第二个参数指定操作将在屏障上等待的管线阶段.在屏障之前和之后允许指定管线阶段取决于在屏障之前和之后如何使用资源
-        允许的值列在规范的table表格中.比如在屏障之后从uniform中读取,指定使用VK_ACCESS_UNIFORM_READ_BIT以及初始着色器从uniform读取作为管线阶段,例如VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+        允许的值列在规范的table表格中.
+        比如在屏障之后从uniform中读取,指定使用VK_ACCESS_UNIFORM_READ_BIT以及初始着色器从uniform读取作为管线阶段,例如VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
         为这种类型的指定非着色器管线阶段是没有意义的,并且当指定和使用类型不匹配的管线阶段时候,validation layer 将会提示警告信息
         第三个参数可以设置为0或者VK_DEPENDENCY_BY_REGION_BIT.后者将屏障变换为每个区域的状态.这意味着,例如,允许已经写完资源的区域开始读的操作,更加细的粒度
         最后三个参数引用管线屏障的数组,有三种类型,第一种 memory barriers,第二种, buffer memory barriers, 和 image memory barriers
         需要注意的是这里没有使用VkFormat参数,但是会在深度缓冲区中使用它做一些特殊的变换
         */
-
 
         // 结束单个命令集
         endSingleTimeCommands(commandBuffer);
@@ -1541,7 +1542,6 @@ private:
     // 加载模型 tinyobjloader库
     void loadModel()
     {
-        // 加载obj模型
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
@@ -1599,7 +1599,7 @@ private:
         int slice = 300;//纵向切几部分
         float sliceStep = (float)(M_PI / slice);//水平圆递增的角度
 
-        float r0, r1, x0, x1, y0, y1, z0, z1; //r0、r1为圆心引向两个临近切片部分表面的两条线 (x0,y0,z0)和(x1,y1,z1)为临近两个切面的点。
+        float r0, r1, x0, x1, y0, y1, z0, z1; //r0、r1为圆心引向两个临近切片部分表面的两条线 (x0,y0,z0)和(x1,y1,z1)为临近两个切面的点
         float alpha0 = 0, alpha1 = 0; //前后两个角度
         float beta = 0; //切片平面上的角度
         std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
@@ -1751,28 +1751,27 @@ private:
         // 计算缓冲区大小直接用sizeof
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        VkBuffer stagingBuffer; // 划分stagingBufferMemory缓冲区用来映射、拷贝顶点数据
-        VkDeviceMemory stagingBufferMemory; // 
+        VkBuffer stagingBuffer; // 划分临时缓冲区用来映射、拷贝顶点数据
+        VkDeviceMemory stagingBufferMemory; // 临时缓冲区内存
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
         vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data); // 内存映射
-        memcpy(data, vertices.data(), (size_t)bufferSize); // 拷贝数据
+        memcpy(data, vertices.data(), (size_t)bufferSize);                 // 拷贝数据
         vkUnmapMemory(device, stagingBufferMemory);
 
         createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 
-        // 
+        // 拷贝临时缓冲区到顶点缓冲区
         copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-        vkDestroyBuffer(device, stagingBuffer, nullptr); // 清除顶点缓冲区
+        vkDestroyBuffer(device, stagingBuffer, nullptr);   // 清除顶点缓冲区
         vkFreeMemory(device, stagingBufferMemory, nullptr);// 清除顶点缓冲区记录
     }
 
     // 创建顶点索引缓冲区
     void createIndexBuffer()
     {
-        // 设置缓冲区大小直接用sizeof
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         VkBuffer stagingBuffer; // 临时缓冲区
@@ -1792,7 +1791,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr); // 清除顶点索引缓冲区记录
     }
 
-    // 创建统一缓冲区 ubo
+    // 创建全局缓冲区 ubo
     void createUniformBuffer()
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
@@ -1802,27 +1801,28 @@ private:
     // 创建描述符集合
     void createDescriptorPool()
     {
-        // 明确需要使用的描述符集合包含的描述符类型与数量
+        // 明确需要使用的描述符池包含的描述符类型与数量
         std::array<VkDescriptorPoolSize, 2> poolSizes = {};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[0].descriptorCount = 1;
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[1].descriptorCount = 1;
 
+        // 创建描述符池初始化
         VkDescriptorPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = 1;// 指定最大的描述符集合的分配数量
 
-        // 创建描述符集合
+        // 创建描述符池
         if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor pool!");
         }
     }
 
-    // 创建设置unifrom layout顺序
+    // 创建描述符设置
     void createDescriptorSet()
     {
         // 存储描述符集合的句柄
@@ -1878,7 +1878,7 @@ private:
     {
         // 创建buffer初始化
         VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;// 类型
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size; // 指定缓冲区字节大小.计算缓冲区每个顶点数据的字节大小可以直接使用sizeof
         bufferInfo.usage = usage;// 指定缓冲区的数据将如何使用.可以使用位操作指定多个使用目的
         // 像交换链中的图像一样,缓冲区也可以由特定的队列簇占有或者多个同时共享.在本项目缓冲区将会被用于图形队列,所以使用独占访问模式exclusive mode
@@ -1902,8 +1902,8 @@ private:
 
         // 在真实的生产环境中的应用程序里,不建议为每个缓冲区调用vkAllocateMemory分配内存
         // 内存分配的最大数量受到maxMemoryAllocationCount物理设备所限,即使像NVIDIA GTX1080这样的高端硬件上,也只能提供4096的大小
-        // 同一时间,为大量对象分配内存的正确方法是创建一个自定义分配器,通过使用我们在许多函数中用到的偏移量offset,将一个大块的可分配内存区域划分为多个可分配内存块,提供缓冲区使用
-        // 可以自己实现一个灵活的内存分配器,或者使用GOUOpen提供的VulkanMemoryAllocator库.然而,对于本项目,可以做到为每个资源使用单独的分配,因为不会触达任何资源限制条件.
+        // 同一时间,为大量对象分配内存的正确方法是创建一个自定义分配器,许多函数中用到的偏移量offset,将一个大块的可分配内存区域划分为多个可分配内存块,提供缓冲区使用
+        // 可以自己实现一个灵活的内存分配器,或者使用GOUOpen提供的VulkanMemoryAllocator库.然而,对于本项目,可以做到为每个资源使用单独的分配,因为不会触达任何资源限制条件
 
         // 如果内存分配成功,使用vkBindBufferMemory函数将内存关联到缓冲区 (先分配)
         if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
@@ -2043,7 +2043,7 @@ private:
             // 开启渲染通道
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
             /*
-            第一个参数总是记录该命令的命令缓冲区.第二个参数指定我们传递的渲染通道的具体信息.最后的参数控制如何提供render pass将要应用的绘制命令.它使用以下数值任意一个:
+            第一个参数是记录该命令的命令缓冲区.第二个参数指定传递的渲染通道的具体信息.最后的参数控制如何提供render pass将要应用的绘制命令.它使用以下数值任意一个:
                 VK_SUBPASS_CONTENTS_INLINE: 渲染过程命令被嵌入在主命令缓冲区中,没有辅助缓冲区执行.
                 VK_SUBPASS_CONTENTS_SECONDARY_COOMAND_BUFFERS: 渲染通道命令将会从辅助命令缓冲区执行.
             */
@@ -2053,7 +2053,7 @@ private:
 
             VkBuffer vertexBuffers[] = { vertexBuffer };
             VkDeviceSize offsets[] = { 0 };
-            // 用于绑定顶点缓冲区,像之前的设置一样,除了命令缓冲区之外,前两参数指定要为其指定的顶点缓冲区的偏移量和数量,后两参数指定将要绑定的顶点缓冲区的数组及开始读数据的起始偏移量
+            // 绑定顶点缓冲区,像之前设置一样,除了命令缓冲区之外,前两参数指定要为其指定的顶点缓冲区的偏移量和数量,后两参数指定将要绑定的顶点缓冲区的数组及开始读数据的起始偏移量
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 
             vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32); // 绑定索引缓冲区
@@ -2063,7 +2063,7 @@ private:
 
             // 前两个参数指定索引的数量和几何instance数量.没有使用instancing,所以指定1.
             // 索引数表示被传递到顶点缓冲区中的顶点数量.下一个参数指定索引缓冲区的偏移量,使用1将会导致图形卡在第二个索引处开始读取
-            // 倒数第二个参数指定索引缓冲区中添加的索引的偏移.最后一个参数指定instancing偏移量,我们没有使用该特性
+            // 倒数第二个参数指定索引缓冲区中添加的索引的偏移.最后一个参数指定instancing偏移量,这里没使用该特性
             vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
             // 渲染通道执行完绘制,可以结束渲染作业
@@ -2141,12 +2141,11 @@ private:
     // 绘制帧 从交换链获取图像,在帧缓冲区中使用作为附件的图像来执行命令缓冲区中的命令,将图像返还给交换链最终呈现
     void drawFrame()
     {
-        // vkAcquireNextImageKHR前两参数是我们希望获取到图像的逻辑设备和交换链.第三参数指定获取有效图像的操作timeout,单位纳秒.使用64位无符号最大值禁止timeout
+        // vkAcquireNextImageKHR前两参数是希望获取到图像的逻辑设备和交换链.第三参数指定获取有效图像的操作timeout,单位纳秒.使用64位无符号最大值禁止timeout
         // 后两参数指定使用的同步对象,当presentation完成图像的呈现后会使用该对象发起信号,这是开始绘制的时间点,它可以指定一个信号量semaphore或栅栏或两者,这里用imageAvailableSemaphore
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(device, swapChain, std::numeric_limits<uint64_t>::max(), imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
 
-        // 如果错误报告
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
             // 重新创建交换链
@@ -2180,7 +2179,7 @@ private:
         // 向图像队列提交命令缓冲区
         // 当开销负载比较大的时候,处于效率考虑,函数可以持有VkSubmitInfo结构体数组
         // 最后一个参数引用了一个可选的栅栏,当命令缓冲区执行完毕时候它会被发送信号
-        // 我们使用信号量进行同步,所以我们需要传递VK_NULL_HANDLE
+        // 这里使用信号量进行同步,所以需要传递VK_NULL_HANDLE
         if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to submit draw command buffer!");
@@ -2262,7 +2261,7 @@ private:
     {
         /*
         VK_PRESENT_MODE_IMMEDIATE_KHR: 应用程序提交的图像被立即传输到屏幕呈现,这种模式可能会造成撕裂效果.
-        VK_PRESENT_MODE_FIFO_KHR: 交换链被看作一个队列,当显示内容需要刷新的时候,显示设备从队列的前面获取图像,并且程序将渲染完成的图像插入队列的后面.如果队列是满的程序会等待
+        VK_PRESENT_MODE_FIFO_KHR:交换链被看作一个队列,当显示内容需要刷新的时候,显示设备从队列的前面获取图像,并且程序将渲染完成的图像插入队列的后面.如果队列是满的程序会等待
            这种规模与视频游戏的垂直同步很类似.显示设备的刷新时刻被成为"垂直中断".
         VK_PRESENT_MODE_FIFO_RELAXED_KHR: 该模式与上一个模式略有不同的地方为,
            如果应用程序存在延迟,即接受最后一个垂直同步信号时队列空了,将不会等待下一个垂直同步信号,而是将图像直接传送.这样做可能导致可见的撕裂效果.
@@ -2294,7 +2293,7 @@ private:
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     {
         // 分辨率的范围被定义在VkSurfaceCapabilitiesKHR结构体中
-        // Vulkan告诉我们通过设置currentExtent成员的width和height来匹配窗体的分辨率
+        // 通过设置currentExtent成员的width和height来匹配窗体的分辨率
         // 一些窗体管理器允许不同的设置,意味着将currentExtent的width和height设置为特殊的数值表示:uint32_t的最大值
         // 在这种情况下,参考窗体minImageExtent和maxImageExtent选择最匹配的分辨率
 
@@ -2313,7 +2312,7 @@ private:
                 static_cast<uint32_t>(height)
             };
 
-            // max和min函数用于将width和height收敛在实际支持的minimum和maximum范围中
+            // max和min函数用于将width和height限制在实际支持的minimum和maximum范围中
             // 在<algorithm>头文件
             actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
             actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
