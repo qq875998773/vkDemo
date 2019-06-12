@@ -3,7 +3,8 @@ set(APP_SRC
     "oldmain.cpp"
 )
 
-include_directories("vk/")
+include_directories("vk/"
+	                "application/")
 
 add_executable (vk ${APP_SRC})
 
