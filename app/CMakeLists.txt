@@ -1,6 +1,6 @@
 ﻿# Add source to this project's executable.
 set(APP_SRC
-    "main.cpp"
+    "oldmain.cpp"
 )
 
 include_directories("vk/")
