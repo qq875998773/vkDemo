@@ -1,3 +1,10 @@
+/*****************************************************
+ * 这是学习初期写的一个面向过程的demo代码,现已废弃
+ * 这段代码是可运行无错的,可以用它绘制一个房子
+ * 也可以修改initVulkan里的模型加载方法使其绘制球体
+ * 如有问题欢迎加QQ群交流,群号：1017638604 
+ *****************************************************/
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -370,7 +377,7 @@ private:
         glfwSetWindowSizeCallback(window, Application::onWindowResized);
     }
 
-    // 初始化vulkan|渲染管线
+    // 初始化vulkan
     void initVulkan()
     {
         createInstance();           // 创建实例
@@ -1542,7 +1549,7 @@ private:
         std::vector<tinyobj::material_t> materials;
         std::string err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str(), "C:/Users/CC/Desktop/hudie/"))
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
         {
             throw std::runtime_error(err);
         }
@@ -1565,7 +1572,7 @@ private:
 
                 vertex.texCoord =
                 {  // 本项目中,使用坐标从左上角0,0到右下角的1,1来映射纹理,从而简单的填充矩形.在这里可以尝试各种坐标.可以尝试使用低于0或者1以上的坐标来查看寻址模式的不同表现
-                   // 由于Vulkan的纹理坐标的起点是左上角,而OBJ格式则是左下角.通过反转纹理坐标的垂直分量来解决这个问题
+                   // Vulkan的纹理坐标的起点是左上角,而OBJ格式则是左下角.通过反转纹理坐标的垂直分量来解决这个问题
                     attrib.texcoords[(uint64_t)2 * index.texcoord_index + 0],
                     1.0f - attrib.texcoords[(uint64_t)2 * index.texcoord_index + 1]
                 };
@@ -1737,7 +1744,6 @@ private:
                 indices.push_back(uniqueVerticesall[vertex0]);
             }
         }
-
     }
 
     // 创建顶点缓冲区
@@ -1858,7 +1864,7 @@ private:
 
         descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrites[1].dstSet = descriptorSet;
-        descriptorWrites[1].dstBinding = 1; // ubiform layout binding = 1,
+        descriptorWrites[1].dstBinding = 1; // ubiform layout binding = 1
         descriptorWrites[1].dstArrayElement = 0;
         descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         descriptorWrites[1].descriptorCount = 1;
@@ -1918,8 +1924,8 @@ private:
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         /*
         level参数指定分配的命令缓冲区的主从关系
-            VK_COMMAND_BUFFER_LEVEL_PRIMARY: 可以提交到队列执行,但不能从其他的命令缓冲区调用.
-            VK_COMMAND_BUFFER_LEVEL_SECONDARY: 无法直接提交,但是可以从主命令缓冲区调用.
+            VK_COMMAND_BUFFER_LEVEL_PRIMARY: 可以提交到队列执行,但不能从其他的命令缓冲区调用
+            VK_COMMAND_BUFFER_LEVEL_SECONDARY: 无法直接提交,但是可以从主命令缓冲区调用
         */
         allocInfo.commandPool = commandPool; // 命令缓冲区通过vkAllocateCommandBuffers函数分配
         allocInfo.commandBufferCount = 1;
@@ -1933,9 +1939,9 @@ private:
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         /*
         flags标志位参数用于指定如何使用命令缓冲区.可选的参数类型如下:
-            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: 命令缓冲区将在执行一次后立即重新记录.
-            VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT: 这是一个辅助缓冲区,它限制在在一个渲染通道中.
-            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT: 命令缓冲区也可以重新提交,同时它也在等待执行.
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: 命令缓冲区将在执行一次后立即重新记录
+            VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT: 这是一个辅助缓冲区,它限制在在一个渲染通道中
+            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT: 命令缓冲区也可以重新提交,同时它也在等待执行
         */
 
         // 开始命令缓冲区
@@ -2039,11 +2045,11 @@ private:
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
             /*
             第一个参数是记录该命令的命令缓冲区.第二个参数指定传递的渲染通道的具体信息.最后的参数控制如何提供render pass将要应用的绘制命令.它使用以下数值任意一个:
-                VK_SUBPASS_CONTENTS_INLINE: 渲染过程命令被嵌入在主命令缓冲区中,没有辅助缓冲区执行.
-                VK_SUBPASS_CONTENTS_SECONDARY_COOMAND_BUFFERS: 渲染通道命令将会从辅助命令缓冲区执行.
+                VK_SUBPASS_CONTENTS_INLINE: 渲染过程命令被嵌入在主命令缓冲区中,没有辅助缓冲区执行
+                VK_SUBPASS_CONTENTS_SECONDARY_COOMAND_BUFFERS: 渲染通道命令将会从辅助命令缓冲区执行
             */
 
-            // 绑定图形管线 第一个参数 记录该命令的命令缓冲区,第二个参数指定具体管线类型,第三个参数graphics 或者 compute pipeline.
+            // 绑定图形管线 第一个参数 记录该命令的命令缓冲区,第二个参数指定具体管线类型,第三个参数graphics 或者 compute pipeline
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
             VkBuffer vertexBuffers[] = { vertexBuffer };
@@ -2126,7 +2132,7 @@ private:
         ubo.testlight = glm::vec3(10.f, 10.f, 10.f);
 
         // 现在定义了所有的变换,所以将UBO中的数据复制到uniform缓冲区.除了没有暂存缓冲区,这与顶点缓冲区的操作完全相同.
-        // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式.相比传递一个更小的数据缓冲区到着色器中,更有效的方式是使用常量.
+        // 使用ubo将并不是经常变化的值传递给着色器是非常有效的方式.相比传递一个更小的数据缓冲区到着色器中,更有效的方式是使用常量
         void* data;
         vkMapMemory(device, uniformBufferMemory, 0, sizeof(ubo), 0, &data);
         memcpy(data, &ubo, sizeof(ubo));
@@ -2255,13 +2261,13 @@ private:
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
     {
         /*
-        VK_PRESENT_MODE_IMMEDIATE_KHR: 应用程序提交的图像被立即传输到屏幕呈现,这种模式可能会造成撕裂效果.
+        VK_PRESENT_MODE_IMMEDIATE_KHR: 应用程序提交的图像被立即传输到屏幕呈现,这种模式可能会造成撕裂效果
         VK_PRESENT_MODE_FIFO_KHR:交换链被看作一个队列,当显示内容需要刷新的时候,显示设备从队列的前面获取图像,并且程序将渲染完成的图像插入队列的后面.如果队列是满的程序会等待
-           这种规模与视频游戏的垂直同步很类似.显示设备的刷新时刻被成为"垂直中断".
+           这种规模与视频游戏的垂直同步很类似.显示设备的刷新时刻被设为"垂直中断"
         VK_PRESENT_MODE_FIFO_RELAXED_KHR: 该模式与上一个模式略有不同的地方为,
-           如果应用程序存在延迟,即接受最后一个垂直同步信号时队列空了,将不会等待下一个垂直同步信号,而是将图像直接传送.这样做可能导致可见的撕裂效果.
-        VK_PRESENT_MODE_MAILBOX_KHR: 这是第二种模式的变种.当交换链队列满的时候,选择新的替换旧的图像,从而替代阻塞应用程序的情形.
-           这种模式通常用来实现三重缓冲区,与标准的垂直同步双缓冲相比,它可以有效避免延迟带来的撕裂效果.
+           如果应用程序存在延迟,即接受最后一个垂直同步信号时队列空了,将不会等待下一个垂直同步信号,而是将图像直接传送.这样做可能导致可见的撕裂效果
+        VK_PRESENT_MODE_MAILBOX_KHR: 这是第二种模式的变种.当交换链队列满的时候,选择新的替换旧的图像,从而替代阻塞应用程序的情形
+           这种模式通常用来实现三重缓冲区,与标准的垂直同步双缓冲相比,它可以有效避免延迟带来的撕裂效果
         */
 
         // 逻辑上看仅仅VR_PRESENT_MODE_FIFO_KHR模式保证可用性
