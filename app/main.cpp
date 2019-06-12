@@ -84,12 +84,12 @@ void OnMouseButton(GLFWwindow* window, int button, int action, int mods)
         }
     }
 
-    if ((button == GLFW_MOUSE_BUTTON_RIGHT) && (action == GLFW_PRESS))
+    if ((button == GLFW_MOUSE_BUTTON_LEFT) && (action == GLFW_PRESS))
     {
         g_is_mouse_tracking = true;
     }
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT)
     {
         if (action == GLFW_PRESS)
         {
@@ -97,11 +97,6 @@ void OnMouseButton(GLFWwindow* window, int button, int action, int mods)
             glfwGetCursorPos(window, &x, &y);
             g_mouse_pos = glm::vec2((float)x, (float)y);
         }
-
-        /*else if (action == GLFW_RELEASE && g_is_mouse_tracking)
-        {
-            g_is_double_click = false;
-        }*/
     }
 
     // 鼠标中键
@@ -208,7 +203,7 @@ struct Vertex
     glm::vec2 texCoord; // 纹理坐标UV
     glm::vec3 normal;   // 顶点法线
 
-    // 顶点输入绑定 描述了在整个顶点数据从内存加载的速率.它指定数据条目之间的间隔字节以及是否每个顶点之后或者每个instance之后移动到下一个条目
+    // 顶点输入绑定 描述了顶点数据从内存加载的规则.它指定数据条目之间的间隔字节以及是否每个顶点之后或者每个instance之后移动到下一个条目
     static VkVertexInputBindingDescription getBindingDescription()
     {
         VkVertexInputBindingDescription bindingDescription = {};
@@ -2113,7 +2108,7 @@ private:
         float  i_ypos = g_mouse_delta.y;
         position = glm::vec3(position.x * std::cos(-speed * i_xpos) - position.y * std::sin(-speed * i_xpos),
                              position.x * std::sin(-speed * i_xpos) + position.y * std::cos(-speed * i_xpos), position.z);
-        position = glm::vec3(position.x, position.y * std::cos(speed * i_ypos) - position.z * std::sin(speed * i_ypos), 
+        position = glm::vec3(position.x, position.y * std::cos(speed * i_ypos) - position.z * std::sin(speed * i_ypos),
                              position.y * std::sin(speed * i_ypos) + position.z * std::cos(speed * i_ypos));
         if (g_is_scroll_delta && FoV - g_scroll_delta.y > 0.f && FoV - g_scroll_delta.y < 90.f)
         {
@@ -2123,9 +2118,9 @@ private:
 
         UniformBufferObject ubo = {};
         ubo.view = glm::lookAt(position, centre, up); // 摄像机位置/中心位置/上下仰角
-        // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度.
+        // 选择使用FOV为45度的透视投影.其他参数是宽高比,近裁剪面和远裁剪面.重要的是使用当前的交换链扩展来计算宽高比,以便在窗体调整大小后参考最新的窗体宽度和高度
         ubo.proj = glm::perspective(glm::radians(FoV), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-        ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置.
+        ubo.proj[1][1] *= -1; // GLM最初是为OpenGL设计的,它的裁剪坐标的Y是反转的.修正该问题的最简单的方法是在投影矩阵中Y轴的缩放因子反转.如果不这样做图像会被倒置
 
         // 加一个测试用的点光
         ubo.testlight = glm::vec3(10.f, 10.f, 10.f);

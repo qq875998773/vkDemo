@@ -3,6 +3,8 @@ set(APP_SRC
     "main.cpp"
 )
 
+include_directories("vk/")
+
 add_executable (vk ${APP_SRC})
 
 target_include_directories(vk PUBLIC "include") # 
