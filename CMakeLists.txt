@@ -14,5 +14,6 @@ find_package(GLFW3 REQUIRED) # 找到glfw3依赖 因为glfw3包含有lib 所以需要添加依赖
 # Include sub-projects.
 add_subdirectory("shaders")
 add_subdirectory("resources")
+add_subdirectory("assets")
 
 add_subdirectory ("app")
