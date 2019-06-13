@@ -2,59 +2,26 @@
 #set(APP_SRC
 #    "oldmain.cpp"
 #)
-#set(APP_DEMO
-#    "main.cpp"
-#)
-#
-#set(VK_DIR "vk")
-#set(APPLICATION_DIR "application")
-#
-#include_directories("vk/"
-#                    "application/")
-#
-#file(GLOB PROJECT_VK ${VK_DIR}/*.h
-#                     ${VK_DIR}/*.cpp)
-#file(GLOB PROJECT_APPLICATION ${APPLICATION_DIR}/*.h
-#                              ${APPLICATION_DIR}/*.cpp)
-#
-#
-#source_group("vk" FILES ${PROJECT_VK})
-#source_group("application" FILES ${PROJECT_APPLICATION})
 #
 #
 ##add_executable (vk ${APP_SRC})
 #
-#add_executable (vkDemo ${APP_DEMO}
-#	                   ${PROJECT_VK}
-#					   ${PROJECT_APPLICATION})
 #
-##target_include_directories(vk PUBLIC "include") # 
-##target_link_libraries(vk Vulkan::Vulkan glfw3::glfw3)
-##add_dependencies(vk Shaders Resources)
+#target_include_directories(vk PUBLIC "include")
+#target_link_libraries(vk Vulkan::Vulkan glfw3::glfw3)
+#add_dependencies(vk Shaders Resources)
 #
-#target_include_directories(vkDemo PUBLIC "include") # 
-#target_link_libraries(vkDemo Vulkan::Vulkan glfw3::glfw3 gli::gli)
-#add_dependencies(vkDemo Assets)
 #
 ##add_custom_command(TARGET vk POST_BUILD
 ##    COMMAND ${CMAKE_COMMAND} -E copy_if_different
 ##        ${GLFW3_DLL}
 ##        $<TARGET_FILE_DIR:vk>
 ##)
-#
-#add_custom_command(TARGET vkDemo POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#        ${GLFW3_DLL}
-#        $<TARGET_FILE_DIR:vkDemo>
-#)
 
 set(SHADER_DIR "assets/shaders")
 set(SRC_DIR "app")
 set(INCLUDE_DIR "application")
 set(DEPS_DIR "include")
-#set(GLFW_DIR "3rdparty")
-
-#add_subdirectory(${GLFW_DIR}/glfw3)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
 
@@ -91,7 +58,6 @@ include_directories("vk/"
                     "include/gli/"
                     "include/stb/"
                     "include/tinyobjloader/"
-					"3rdparty/glfw3/include"
 					"$ENV{VULKAN_SDK}/Include")
 
 file(GLOB PROJECT_HEADERS ${INCLUDE_DIR}/*.h
@@ -139,7 +105,8 @@ add_executable(vkTest  ${PROJECT_SOURCES}
                        ${PROJECT_CONFIGS})
 
 target_include_directories(vkTest PUBLIC "include")
+target_include_directories(vkTest PUBLIC "3rdparty/glfw3")
 #target_link_libraries(vkTest glfw ${GLFW_LIBRARIES} ${Vulkan_LIBRARY} spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
-target_link_libraries(vkTest Vulkan::Vulkan glfw ${GLFW_LIBRARIES} glfw3::glfw3)
+target_link_libraries(vkTest glfw ${GLFW_LIBRARIES} ${Vulkan_LIBRARY} spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
 
 set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目
