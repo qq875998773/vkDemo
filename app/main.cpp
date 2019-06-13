@@ -5,7 +5,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        std::cout << "holle vulkan!\n";
+        std::cout << "hello vulkan!\n";
         //app.run();
     }
     catch (const std::runtime_error& e)
