@@ -54,10 +54,6 @@ set(INCLUDE_DIR "application")
 set(DEPS_DIR "include")
 #set(GLFW_DIR "3rdparty")
 
-option(GLFW_BUILD_DOCS OFF)
-option(GLFW_BUILD_EXAMPLES OFF)
-option(GLFW_BUILD_TESTS OFF)
-
 #add_subdirectory(${GLFW_DIR}/glfw3)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
@@ -96,7 +92,7 @@ include_directories("vk/"
                     "include/stb/"
                     "include/tinyobjloader/"
 					"3rdparty/glfw3/include"
-                    "$ENV{VULKAN_SDK}/Include")
+					"$ENV{VULKAN_SDK}/Include")
 
 file(GLOB PROJECT_HEADERS ${INCLUDE_DIR}/*.h
                           ${INCLUDE_DIR}/*.cpp)
@@ -144,6 +140,6 @@ add_executable(vkTest  ${PROJECT_SOURCES}
 
 target_include_directories(vkTest PUBLIC "include")
 #target_link_libraries(vkTest glfw ${GLFW_LIBRARIES} ${Vulkan_LIBRARY} spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
-target_link_libraries(vkTest  glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glfw3::glfw3)
+target_link_libraries(vkTest Vulkan::Vulkan glfw ${GLFW_LIBRARIES} glfw3::glfw3)
 
 set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目
