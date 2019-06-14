@@ -41,7 +41,8 @@ namespace vv
 
         stream << "@[" << layer_prefix << "]" << std::endl;
         stream << msg << std::endl;
-        std::cout << stream.str() << std::endl;
+        // ÆÁ±ÎdebugÊä³öÈÕÖ¾
+        //std::cout << stream.str() << std::endl;
 
 #ifdef _WIN32
         if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT)
@@ -67,6 +68,7 @@ namespace vv
             //VK_DEBUG_REPORT_FLAG_BITS_MAX_ENUM_EXT;
 
         VkResult result = VK_ERROR_EXTENSION_NOT_PRESENT;
+
         if (func != nullptr)
             result = func(instance, &_debug_callback_create_info, allocator, &_debug_callback);
 

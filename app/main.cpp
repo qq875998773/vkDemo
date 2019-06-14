@@ -1,13 +1,13 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "virtualVistaEngine.h"
+#include "application.h"
 
 using namespace vv;
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
-    VirtualVistaEngine app;
+    Application app;
     app.create(argc, argv);
 
     Scene* scene = app.getScene();

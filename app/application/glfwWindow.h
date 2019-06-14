@@ -16,10 +16,11 @@ namespace vv
 
     class GLFWWindow
     {
+        // 友元类 使当前类可以访问inputManager的私有成员
         friend class InputManager;
 
     public:
-        GLFWwindow* window; // GLFW typedef
+        GLFWwindow* window;
         VkSurfaceKHR surface;
         std::unordered_map<VulkanDevice*, VulkanSurfaceDetailsHandle> surface_settings;
         uint32_t glfw_extension_count;
@@ -32,25 +33,18 @@ namespace vv
         ~GLFWWindow() = default;
 
         /*
-         * Initializes GLFW and creates the window wrapper.
-         *
          * todo: add resizing event handler. requires manually updating framebuffer
          */
+        // 初始化创建窗体
         void create(const int width, const int height, const char* application_name);
 
-        /*
-         * Creates a Vulkan surface for generically communicating between Vulkan and the system window API.
-         */
+        // 创建vk API和窗体的连接
         void createSurface(VkInstance instance);
 
-        /*
-         * Deletes all necessary Vulkan and GLFW containers.
-         */
+        // 销毁所有vk和glfw容器
         void shutDown(VkInstance instance);
-
-        /*
-         * Execute main GLFW polling code.
-         */
+        
+        // 运行
         void run();
 
         /*
@@ -64,24 +58,16 @@ namespace vv
         bool shouldClose();
 
     private:
-
-        /*
-         * 键盘按键
-         */
+         // 键盘按键
         static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-        /*
-         * 鼠标位置
-         */
+
+         // 鼠标位置
         static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos);
 
-        /*
-         * 鼠标按键
-         */
+         // 鼠标按键
         static void mousebuttonCallback(GLFWwindow* window, int button, int action, int mods);
 
-        /*
-         * 鼠标滚轮
-         */
+         // 鼠标滚轮
         static void scrollCallback(GLFWwindow* window, double x, double y);
     };
 }

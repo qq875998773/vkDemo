@@ -61,8 +61,8 @@ set(PROJECT_HEADERS application/camera.cpp
                     application/skyBox.h
                     application/textureManager.cpp
                     application/textureManager.h
-                    application/virtualVistaEngine.cpp
-                    application/virtualVistaEngine.h)
+                    application/application.cpp
+                    application/application.h)
 
 set(PROJECT_VULKAN_SOURCES vk/vkBuffer.cpp
                            vk/vkBuffer.h

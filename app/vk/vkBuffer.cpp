@@ -3,16 +3,13 @@
 
 namespace vv
 {
-    ///////////////////////////////////////////////////////////////////////////////////////////// Public
     VulkanBuffer::VulkanBuffer()
     {
     }
 
-
     VulkanBuffer::~VulkanBuffer()
     {
     }
-
 
     void VulkanBuffer::create(VulkanDevice* device, VkBufferUsageFlags usage_flags, VkDeviceSize size)
     {
@@ -29,7 +26,6 @@ namespace vv
         allocateMemory(size, usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, m_buffer_memory);
     }
 
-
     void VulkanBuffer::shutDown()
     {
         if (m_staging_buffer)
@@ -41,13 +37,11 @@ namespace vv
         vkFreeMemory(m_device->logical_device, m_buffer_memory, nullptr);
     }
 
-
     void VulkanBuffer::updateAndTransfer(void* data)
     {
         update(data);
         transferToDevice();
     }
-
 
     void VulkanBuffer::update(void* data)
     {
@@ -57,7 +51,6 @@ namespace vv
         memcpy(mapped_data, data, size);
         vkUnmapMemory(m_device->logical_device, m_staging_memory);
     }
-
 
     void VulkanBuffer::transferToDevice()
     {
@@ -85,8 +78,6 @@ namespace vv
             util::endSingleUseCommand(m_device->logical_device, command_pool_used, command_buffer, m_device->graphics_queue);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
     void VulkanBuffer::allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory)
     {
         // Create the Vulkan abstraction for a vertex buffer.

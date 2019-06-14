@@ -1,6 +1,3 @@
-#ifndef VIRTUALVISTA_VIRTUALVISTAENGINE_H
-#define VIRTUALVISTA_VIRTUALVISTAENGINE_H
-
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -10,15 +7,13 @@
 
 namespace vv
 {
-    class VirtualVistaEngine
+    class Application
     {
     public:
-        VirtualVistaEngine() = default;
-        ~VirtualVistaEngine() = default;
+        Application() = default;
+        ~Application() = default;
 
-        /*
-         * Initializes all essential components required by the engine.
-         */
+        // 初始化所有部件
         void create(int argc, char** argv);
 
         /*
@@ -43,7 +38,7 @@ namespace vv
 
         const uint32_t m_window_width = 1080;
         const uint32_t m_window_height = 720;
-        const char* m_application_name = "Virtual Vista";
+        const char* m_application_name = "VkDemo";
 
         float m_move_speed = 4.0f;
 
@@ -61,5 +56,3 @@ namespace vv
         void mouseInput(float delta_time);
     };
 }
-
-#endif // VIRTUALVISTA_VIRTUALVISTAENGINE_H

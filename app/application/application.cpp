@@ -1,13 +1,14 @@
 #include <stdexcept>
 #include <chrono>
 
-#include "virtualVistaEngine.h"
+#include "application.h"
 #include "inputManager.h"
 #include "settings.h"
 
 namespace vv
 {
-    void VirtualVistaEngine::create(int argc, char** argv)
+
+    void Application::create(int argc, char** argv)
     {
         m_argc = argc;
         m_argv = argv;
@@ -21,20 +22,18 @@ namespace vv
         m_scene = m_renderer->getScene();
     }
 
-
-    void VirtualVistaEngine::shutDown()
+    void Application::shutDown()
     {
         m_renderer->shutDown();
     }
 
-
-    Scene* VirtualVistaEngine::getScene() const
+    Scene* Application::getScene() const
     {
         return m_scene;
     }
 
     // 键盘操作
-    void VirtualVistaEngine::handleInput(float delta_time)
+    void Application::handleInput(float delta_time)
     {
         float move_speed = m_move_speed * delta_time;
 
@@ -62,7 +61,7 @@ namespace vv
     }
 
     // 鼠标按键
-    void VirtualVistaEngine::mouseInput(float delta_time)
+    void Application::mouseInput(float delta_time)
     {
         float rotate_speed = m_rotate_speed * delta_time;
         Camera* camera = m_scene->getActiveCamera();
@@ -75,7 +74,7 @@ namespace vv
     }
 
     // 开启主循环
-    void VirtualVistaEngine::beginMainLoop()
+    void Application::beginMainLoop()
     {
         m_renderer->recordCommandBuffers();
 
