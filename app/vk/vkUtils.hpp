@@ -11,8 +11,8 @@
 #ifndef VIRTUALVISTA_UTILS_H
 #define VIRTUALVISTA_UTILS_H
 
-#define VV_SAFE_DELETE(p) { \
-        if (!p) {} \
+#define VV_SAFE_DELETE(p) {          \
+        if (!p) {}                   \
         else { delete p; p = NULL; } \
     }
 
@@ -75,6 +75,7 @@ namespace vv
 
 #endif
 
+    // ¶¥µã½á¹¹
     struct Vertex
     {
     public:
@@ -346,5 +347,4 @@ namespace std
         }
     };
 }
-
-#endif // VIRTUALVISTA_UTILS_H
+#endif

@@ -135,7 +135,7 @@ namespace vv
         m_scene.create(&m_physical_device, &m_render_pass);
     }
 
-
+    // Çå³ý×ÊÔ´
     void DeferredRenderer::shutDown()
     {
         // accounts for the issue of a logical device that might be executing commands when a terminating command is issued.

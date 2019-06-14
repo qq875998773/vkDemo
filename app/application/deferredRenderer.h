@@ -26,17 +26,10 @@ namespace vv
         DeferredRenderer() = default;
         ~DeferredRenderer() = default;
 
-        /*
-         * Initialize all necessary Vulkan internals.
-         */
+        // 初始化vk交换链
         void create(GLFWWindow* window);
 
-        /*
-         * Destroy all Vulkan internals in the correct order.
-         *
-         * note: this needs to be called at application termination to ensure that all corresponding Vulkan pieces
-         *       are destroyed in the proper order. This is needed because of C++'s lack of destructor guarantees.
-         */
+        // 按顺序销毁所有vulkan内部资源
         void shutDown();
 
         /*

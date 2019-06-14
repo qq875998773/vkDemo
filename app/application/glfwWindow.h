@@ -32,9 +32,7 @@ namespace vv
         GLFWWindow() = default;
         ~GLFWWindow() = default;
 
-        /*
-         * todo: add resizing event handler. requires manually updating framebuffer
-         */
+         // todo: add resizing event handler. requires manually updating framebuffer
         // 初始化创建窗体
         void create(const int width, const int height, const char* application_name);
 
@@ -47,14 +45,10 @@ namespace vv
         // 运行
         void run();
 
-        /*
-         * Tell GLFW when the window needs to close.
-         */
+        // 当窗口需要关闭时通知glfw
         void setShouldClose(bool should_close);
 
-        /*
-         * Returns whether GLFW received a termination signal.
-         */
+        // 返回glfw是否接收到终止信号
         bool shouldClose();
 
     private:
@@ -71,5 +65,4 @@ namespace vv
         static void scrollCallback(GLFWwindow* window, double x, double y);
     };
 }
-
-#endif // VIRTUALVISTA_GLFWWINDOW_H
+#endif

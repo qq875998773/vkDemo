@@ -22,6 +22,7 @@ namespace vv
         m_scene = m_renderer->getScene();
     }
 
+    // Çå³ý×ÊÔ´
     void Application::shutDown()
     {
         m_renderer->shutDown();
