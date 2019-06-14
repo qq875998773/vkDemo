@@ -1,56 +1,12 @@
 ﻿# Add source to this project's executable.
-#set(APP_SRC
-#    "oldmain.cpp"
-#)
-#
-#
-##add_executable (vk ${APP_SRC})
-#
-#
-#target_include_directories(vk PUBLIC "include")
-#target_link_libraries(vk Vulkan::Vulkan glfw3::glfw3)
-#add_dependencies(vk Shaders Resources)
-#
-#
-##add_custom_command(TARGET vk POST_BUILD
-##    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-##        ${GLFW3_DLL}
-##        $<TARGET_FILE_DIR:vk>
-##)
-
 set(SHADER_DIR ${PROJECT_SOURCE_DIR}/assets/shaders)
-set(SRC_DIR ${PROJECT_SOURCE_DIR}/app)
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/application)
 set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+#set(SRC_DIR ${PROJECT_SOURCE_DIR}/app)
+#set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/application)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
 
-#message(STATUS "Using module to find Vulkan")
-#find_package(Vulkan)
-
-#if(NOT Vulkan_FOUND)
-#    message(STATUS "Vulkan not found through module. Attempting to manually find.")
-#    if(WIN32)
-#        find_library(Vulkan_LIBRARY NAMES vulkan-1 vulkan HINTS "$ENV{VULKAN_SDK}/Lib/" REQUIRED)
-#        if(Vulkan_LIBRARY)
-#            set(Vulkan_FOUND ON)
-#            message(STATUS "Using bundled Vulkan library version.")
-#        endif()
-#    endif(WIN32)
-#endif()
-#
-#if (NOT Vulkan_FOUND)
-#    message(FATAL_ERROR "Could not find Vulkan library! Maybe you forgot to reboot after changing environment variables or Vulkan update.")
-#endif()
-
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-    add_definitions( -DROOTPROJECTDIR="${CMAKE_SOURCE_DIR}" )
-    # for some reason, the MSVC compiler's optimizations executes vital Vulkan commands out of order
-    string(REPLACE "/O2" "/Od" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
-else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -std=c++11")
-endif()
+add_definitions( -DROOTPROJECTDIR="${CMAKE_SOURCE_DIR}" )  # 定义ROOTPROJECTDIR为项目根路径
 
 include_directories("vk/"
                     "include/glm/"
@@ -58,37 +14,105 @@ include_directories("vk/"
                     "include/gli/"
                     "include/stb/"
                     "include/tinyobjloader/"
-					"$ENV{VULKAN_SDK}/Include")
+                    "$ENV{VULKAN_SDK}/Include")
 
-file(GLOB PROJECT_HEADERS ${INCLUDE_DIR}/*.h
-                          ${INCLUDE_DIR}/*.cpp)
-file(GLOB PROJECT_VULKAN_SOURCES ${SRC_DIR}/vk/*.cpp
-                                 ${SRC_DIR}/vk/*.h)
-file(GLOB PROJECT_SOURCES ${SRC_DIR}/main.cpp)
-file(GLOB PROJECT_SHADERS ${SHADER_DIR}/*.comp
-                          ${SHADER_DIR}/*.frag
-                          ${SHADER_DIR}/*.geom
-                          ${SHADER_DIR}/*.vert
-                          ${SHADER_DIR}/*.tess
-                          ${SHADER_DIR}/*.glsl)
+# 更改这种批量添加的方式,后期新增文件容易遗漏,改用set设置路径
+#file(GLOB PROJECT_HEADERS ${INCLUDE_DIR}/*.h
+#                          ${INCLUDE_DIR}/*.cpp)
+#file(GLOB PROJECT_VULKAN_SOURCES ${SRC_DIR}/vk/*.cpp
+#                                 ${SRC_DIR}/vk/*.h)
+#file(GLOB PROJECT_SOURCES ${SRC_DIR}/main.cpp)
+#file(GLOB PROJECT_SHADERS ${SHADER_DIR}/*.comp
+#                          ${SHADER_DIR}/*.frag
+#                          ${SHADER_DIR}/*.geom
+#                          ${SHADER_DIR}/*.vert
+#                          ${SHADER_DIR}/*.tess
+#                          ${SHADER_DIR}/*.glsl)
 
-file(GLOB PROJECT_CONFIGS "CMakeLists.txt"
-                          "${SHADER_DIR}/shader_info.txt")
+#file(GLOB PROJECT_CONFIGS "CMakeLists.txt"
+#                          "${SHADER_DIR}/shader_info.txt")
+
+
+set(PROJECT_HEADERS application/camera.cpp
+                    application/camera.h
+                    application/deferredRenderer.cpp
+                    application/deferredRenderer.h
+                    application/entity.cpp
+                    application/entity.h
+                    application/glfwWindow.cpp
+                    application/glfwWindow.h
+                    application/inputManager.cpp
+                    application/inputManager.h
+                    application/light.cpp
+                    application/light.h
+                    application/material.cpp
+                    application/material.h
+                    application/mesh.cpp
+                    application/mesh.h
+                    application/model.cpp
+                    application/model.h
+                    application/modelManager.cpp
+                    application/modelManager.h
+                    application/scene.cpp
+                    application/scene.h
+                    application/settings.cpp
+                    application/settings.h
+                    application/skyBox.cpp
+                    application/skyBox.h
+                    application/textureManager.cpp
+                    application/textureManager.h
+                    application/virtualVistaEngine.cpp
+                    application/virtualVistaEngine.h)
+
+set(PROJECT_VULKAN_SOURCES vk/vkBuffer.cpp
+                           vk/vkBuffer.h
+                           vk/vkDevice.cpp
+                           vk/vkDevice.h
+                           vk/vkImage.cpp
+                           vk/vkImage.h
+                           vk/vkImageView.cpp
+                           vk/vkImageView.h
+                           vk/vkPipeline.cpp
+                           vk/vkPipeline.h
+                           vk/vkRenderPass.cpp
+                           vk/vkRenderPass.h
+                           vk/vkSampler.cpp
+                           vk/vkSampler.h
+                           vk/vkShaderModule.cpp
+                           vk/vkShaderModule.h
+                           vk/vkSwapChain.cpp
+                           vk/vkSwapChain.h
+                           vk/vkUtils.hpp)
+
+set(PROJECT_SOURCES main.cpp)
+
+set(PROJECT_SHADERS ${SHADER_DIR}/shader_info.txt
+                    ${SHADER_DIR}/dummy.frag
+                    ${SHADER_DIR}/dummy.vert
+                    ${SHADER_DIR}/PBR_IBL.frag
+                    ${SHADER_DIR}/PBR_IBL.vert
+                    ${SHADER_DIR}/phong.frag
+                    ${SHADER_DIR}/phong.vert
+                    ${SHADER_DIR}/skybox.frag
+                    ${SHADER_DIR}/skybox.vert
+                    ${SHADER_DIR}/triangle.frag
+                    ${SHADER_DIR}/triangle.vert)
+
 
 # Vulkan shaders need compiling prior to running
-if(MSVC)
-    # todo: need check if any of them have changed
-    # todo: only recompile if any of them have changed
-    foreach(SHADER_FILE ${PROJECT_SHADERS})
-        string(FIND ${SHADER_FILE} "." DOT_POSITION)
-        string(SUBSTRING ${SHADER_FILE} 0 ${DOT_POSITION} SHADER_NAME)
-        math(EXPR DOT_POSITION "${DOT_POSITION}+1")
-        string(SUBSTRING ${SHADER_FILE} ${DOT_POSITION} 4 SHADER_EXTENSION)
-
-        message(STATUS "Compiling shader: ${SHADER_NAME}.${SHADER_EXTENSION}")
-        execute_process(COMMAND CMD /c $ENV{VULKAN_SDK}/Bin/glslangValidator.exe -V -o ${SHADER_NAME}_${SHADER_EXTENSION}.spv ${SHADER_FILE})
-    endforeach(SHADER_FILE)
-endif()
+#if(MSVC)
+#    # todo: need check if any of them have changed
+#    # todo: only recompile if any of them have changed
+#    foreach(SHADER_FILE ${PROJECT_SHADERS})
+#        string(FIND ${SHADER_FILE} "." DOT_POSITION)
+#        string(SUBSTRING ${SHADER_FILE} 0 ${DOT_POSITION} SHADER_NAME)
+#        math(EXPR DOT_POSITION "${DOT_POSITION}+1")
+#        string(SUBSTRING ${SHADER_FILE} ${DOT_POSITION} 4 SHADER_EXTENSION)
+#
+#        message(STATUS "Compiling shader: ${SHADER_NAME}.${SHADER_EXTENSION}")
+#        execute_process(COMMAND CMD /c $ENV{VULKAN_SDK}/Bin/glslangValidator.exe -V -o ${SHADER_NAME}_${SHADER_EXTENSION}.spv ${SHADER_FILE})
+#    endforeach(SHADER_FILE)
+#endif()
 
 source_group("application" FILES ${PROJECT_HEADERS})
 source_group("shaders" FILES ${PROJECT_SHADERS})
@@ -100,16 +124,13 @@ add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}
 add_executable(vkTest  ${PROJECT_SOURCES}
                        ${PROJECT_VULKAN_SOURCES}
                        ${PROJECT_HEADERS}
-                       ${PROJECT_SHADERS}
-                       ${PROJECT_CONFIGS})
+                       ${PROJECT_SHADERS})
 
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
-#target_include_directories(vkTest PUBLIC "3rdparty/glfw3")
-#target_link_libraries(vkTest glfw ${GLFW_LIBRARIES} ${Vulkan_LIBRARY} spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
 target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
 
-set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目
+#set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
 
 add_custom_command(TARGET vkTest POST_BUILD        # 拷贝DLL到运行目录
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
