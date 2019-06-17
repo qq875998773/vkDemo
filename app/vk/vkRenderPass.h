@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANRENDERPASS_H
-#define VIRTUALVISTA_VULKANRENDERPASS_H
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -92,5 +90,3 @@ namespace vv
         }
     };
 }
-
-#endif // VIRTUALVISTA_VULKANRENDERPASS_H

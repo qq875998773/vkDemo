@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_GLFWWINDOW_H
-#define VIRTUALVISTA_GLFWWINDOW_H
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -65,4 +64,3 @@ namespace vv
         static void scrollCallback(GLFWwindow* window, double x, double y);
     };
 }
-#endif

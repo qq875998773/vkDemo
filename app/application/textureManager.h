@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_TEXTUREMANAGER_H
-#define VIRTUALVISTA_TEXTUREMANAGER_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -78,5 +77,3 @@ namespace vv
             VkImageCreateFlags flags, uint32_t mip_levels, uint32_t array_layers, VkImageViewType image_view_type);
     };
 }
-
-#endif // VIRTUALVISTA_TEXTUREMANAGER_H

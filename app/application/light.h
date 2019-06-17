@@ -1,5 +1,6 @@
-#ifndef VIRTUALVISTA_LIGHT_H
-#define VIRTUALVISTA_LIGHT_H
+#pragma once
+//#ifndef VIRTUALVISTA_LIGHT_H
+//#define VIRTUALVISTA_LIGHT_H
 
 #include <vector>
 
@@ -30,4 +31,4 @@ namespace vv
     };
 }
 
-#endif // VIRTUALVISTA_LIGHT_H
+//#endif // VIRTUALVISTA_LIGHT_H

@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_DEFERREDRENDERER_H
-#define VIRTUALVISTA_DEFERREDRENDERER_H
+#pragma once
 
 #include <vector>
 #include <array>
@@ -60,7 +59,7 @@ namespace vv
 
         GLFWWindow* m_window = nullptr;
         VkInstance m_instance = VK_NULL_HANDLE;
-        VulkanDevice m_physical_device;
+        VulkanDevice m_physical_device;          // 物理设备
 
         VulkanSwapChain m_swap_chain;
         std::vector<VkFramebuffer> m_frame_buffers;
@@ -114,5 +113,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_DEFERREDRENDERER_H

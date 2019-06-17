@@ -7,19 +7,25 @@
 
 namespace vv
 {
-
+    // 创建程序初始化
     void Application::create(int argc, char** argv)
     {
         m_argc = argc;
         m_argv = argv;
 
+        // 创建窗体
         m_window.create(m_window_width, m_window_height, m_application_name);
 
         // todo: does this need to be malloced?
-        m_renderer = new DeferredRenderer;
+        m_renderer = new DeferredRenderer; // 新建渲染实例
 
+        // 创建渲染初始化
         m_renderer->create(&m_window);
         m_scene = m_renderer->getScene();
+
+        // 消息提示
+        std::cout << "Initialization Completed...\n";
+        std::cout << "Get Ready Renderering...\n";
     }
 
     // 清除资源
@@ -28,6 +34,7 @@ namespace vv
         m_renderer->shutDown();
     }
 
+    // 获取场景
     Scene* Application::getScene() const
     {
         return m_scene;

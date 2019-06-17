@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_ENTITY_H
-#define VIRTUALVISTA_ENTITY_H
+#pragma once
 
 #include <vector>
 
@@ -32,5 +31,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_ENTITY_H

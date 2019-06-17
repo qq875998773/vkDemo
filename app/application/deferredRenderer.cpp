@@ -84,18 +84,19 @@ namespace vv
             func(instance, _debug_callback, allocator);
 #endif
     }
-
+    
+    // 创建延时渲染
     void DeferredRenderer::create(GLFWWindow* window)
     {
         m_window = window;
 
-        createVulkanInstance();
-        m_window->createSurface(m_instance);
+        createVulkanInstance();             // 创建vk实例
+        m_window->createSurface(m_instance);// 创建vk API和窗体连接
 
         DeferredRenderer::createDebugReportCallbackEXT(m_instance, vulkanDebugCallback, nullptr);
-        createVulkanDevices();
+        createVulkanDevices(); // 
 
-        m_swap_chain.create(&m_physical_device, m_window);
+        m_swap_chain.create(&m_physical_device, m_window); // 创建交换链
 
         m_render_pass.addAttachment
         (
@@ -132,7 +133,7 @@ namespace vv
         m_image_ready_semaphore = util::createVulkanSemaphore(this->m_physical_device.logical_device);
         m_rendering_complete_semaphore = util::createVulkanSemaphore(this->m_physical_device.logical_device);
 
-        m_scene.create(&m_physical_device, &m_render_pass);
+        m_scene.create(&m_physical_device, &m_render_pass); // 创建场景
     }
 
     // 清除资源
@@ -246,22 +247,22 @@ namespace vv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
+    // 创建vk实例
     void DeferredRenderer::createVulkanInstance()
     {
         VV_ASSERT(checkValidationLayerSupport(), "Validation layers requested are not available on this system.");
 
-        // Instance Creation
+        // 创建实例
         std::string application_name = Settings::inst()->getApplicationName();
         std::string engine_name = Settings::inst()->getEngineName();
 
-        VkApplicationInfo app_info = {};
+        VkApplicationInfo app_info = {};                        // 应用程序初始化
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = application_name.c_str();
-        app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.pEngineName = engine_name.c_str();
-        app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.apiVersion = VK_API_VERSION_1_0;
+        app_info.pApplicationName = application_name.c_str();   // 设置应用程序名字
+        app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0); // 应用程序版本
+        app_info.pEngineName = engine_name.c_str();             // 设置引擎名字
+        app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);      // 引擎版本
+        app_info.apiVersion = VK_API_VERSION_1_0;               // API最低版本
 
         // Ensure required extensions are found.
         VV_ASSERT(checkInstanceExtensionSupport(), "Extensions requested, but are not available on this system.");
@@ -352,29 +353,32 @@ namespace vv
         return true;
     }
 
-
+    // vk设备是否合适
     bool DeferredRenderer::isVulkanDeviceSuitable(VulkanDevice& device)
     {
         return device.hasGraphicsQueue() && device.querySwapChainSupport(m_window->surface).is_supported;
     }
 
-
+    // 创建vk设备
     void DeferredRenderer::createVulkanDevices()
     {
+        // 获取物理设备数量
         uint32_t _physical_device_count = 0;
         vkEnumeratePhysicalDevices(m_instance, &_physical_device_count, nullptr);
 
         VV_ASSERT(_physical_device_count != 0, "Vulkan Error: no gpu with Vulkan support found");
 
+        // 为物理设备赋值
         std::vector<VkPhysicalDevice> physical_devices(_physical_device_count);
         vkEnumeratePhysicalDevices(m_instance, &_physical_device_count, physical_devices.data());
-
+        
         bool found = false;
 
         // Find any physical devices that might be suitable for on screen rendering.
         for (const auto& device : physical_devices)
         {
             m_physical_device.create(device);
+            // 判断设备是否合适
             if (isVulkanDeviceSuitable(m_physical_device))
             {
                 if (m_physical_device.hasTransferQueue())
@@ -384,6 +388,12 @@ namespace vv
 
                 m_window->surface_settings[&m_physical_device] = m_physical_device.querySwapChainSupport(m_window->surface);
                 found = true;
+
+                // 获取设备名字
+                VkPhysicalDeviceProperties deviceProperties;
+                vkGetPhysicalDeviceProperties(device, &deviceProperties);
+                std::cout << "DeviceName: " << deviceProperties.deviceName << "\n"; // 输出设备名字
+
                 break;
             }
             else

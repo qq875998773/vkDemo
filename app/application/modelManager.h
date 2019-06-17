@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_ASSETMANAGER_H
-#define VIRTUALVISTA_ASSETMANAGER_H
+#pragma once
 
 #include <unordered_map>
 #include <string>
@@ -14,6 +13,7 @@
 
 namespace vv
 {
+    // 模型管理
     class ModelManager
     {
         friend class Scene;
@@ -65,5 +65,3 @@ namespace vv
         bool loadGLTF();
     };
 }
-
-#endif // VIRTUALVISTA_ASSETMANAGER_H

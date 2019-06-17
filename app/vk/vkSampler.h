@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANSAMPLER_H
-#define VIRTUALVISTA_VULKANSAMPLER_H
+#pragma once
 
 #include "vkDevice.h"
 
@@ -42,5 +40,3 @@ namespace vv
         VulkanDevice* m_device;
     };
 }
-
-#endif // VIRTUALVISTA_VULKANSAMPLER_H

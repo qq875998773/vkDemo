@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_MATERIAL_H
-#define VIRTUALVISTA_MATERIAL_H
+#pragma once
 
 #include <vector>
 #include <utility>
@@ -86,5 +85,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_MATERIAL_H

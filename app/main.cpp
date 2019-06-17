@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <stdexcept>
 
@@ -7,6 +9,7 @@ using namespace vv;
 
 int main(int argc, char* argv[])
 {
+    // 初始化创建
     Application app;
     app.create(argc, argv);
 

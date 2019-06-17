@@ -1,5 +1,5 @@
-#ifndef VIRTUALVISTA_CAMERA_H
-#define VIRTUALVISTA_CAMERA_H
+//#ifndef VIRTUALVISTA_CAMERA_H
+//#define VIRTUALVISTA_CAMERA_H
 
 #include <vector>
 
@@ -67,4 +67,4 @@ namespace vv
     };
 }
 
-#endif // VIRTUALVISTA_CAMERA_H
+//#endif // VIRTUALVISTA_CAMERA_H

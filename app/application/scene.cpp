@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 #include <fstream>
 #include <chrono>
@@ -10,6 +12,7 @@
 
 namespace vv
 {
+    // 创建场景
     void Scene::create(VulkanDevice* device, VulkanRenderPass* render_pass)
     {
         m_device = device;
@@ -181,7 +184,7 @@ namespace vv
             m.updateModelUBO();
     }
 
-
+    // 渲染
     void Scene::render(VkCommandBuffer command_buffer)
     {
         bool first_run = true;
@@ -197,6 +200,7 @@ namespace vv
             m_active_skybox->render(command_buffer);
         }
 
+        // 循环每个模型
         int i = 0;
         for (auto& model : m_models)
         {
@@ -228,8 +232,7 @@ namespace vv
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
+    // 材质模板集
     void Scene::createMaterialTemplates()
     {
         std::string shader_file = Settings::inst()->getShaderDirectory() + "shader_info.txt";
@@ -361,7 +364,7 @@ namespace vv
         createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, m_scene_descriptor_set_layout);
     }
 
-
+    // 分配场景描述符设置
     void Scene::allocateSceneDescriptorSets()
     {
         VkDescriptorSetAllocateInfo scene_alloc_info = {};
@@ -423,18 +426,18 @@ namespace vv
         }
     }
 
-
+    // 场景全局描述符分配
     void Scene::createEnvironmentUniforms()
     {
         std::vector<VkDescriptorSetLayoutBinding> temp_bindings_buffer;
         temp_bindings_buffer.push_back(createDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
         temp_bindings_buffer.push_back(createDescriptorSetLayoutBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
         temp_bindings_buffer.push_back(createDescriptorSetLayoutBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-        createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, m_environment_descriptor_set_layout);
+        createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, m_environment_descriptor_set_layout); // IBL
 
-        temp_bindings_buffer.clear();
+        temp_bindings_buffer.clear(); // 清除所有元素
         temp_bindings_buffer.push_back(createDescriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT));
-        createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, m_radiance_descriptor_set_layout);
+        createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, m_radiance_descriptor_set_layout); // skyBox
 
         /// Descriptor Sets
         VkDescriptorSetAllocateInfo env_alloc_info = {};
@@ -443,7 +446,7 @@ namespace vv
         env_alloc_info.descriptorSetCount = 1;
         env_alloc_info.pSetLayouts = &m_environment_descriptor_set_layout;
 
-        VV_CHECK_SUCCESS(vkAllocateDescriptorSets(m_device->logical_device, &env_alloc_info, &m_environment_descriptor_set));
+        VV_CHECK_SUCCESS(vkAllocateDescriptorSets(m_device->logical_device, &env_alloc_info, &m_environment_descriptor_set)); // 分配IBL描述符集合
 
         VkDescriptorSetAllocateInfo rad_alloc_info = {};
         rad_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -451,10 +454,10 @@ namespace vv
         rad_alloc_info.descriptorSetCount = 1;
         rad_alloc_info.pSetLayouts = &m_radiance_descriptor_set_layout;
 
-        VV_CHECK_SUCCESS(vkAllocateDescriptorSets(m_device->logical_device, &rad_alloc_info, &m_radiance_descriptor_set));
+        VV_CHECK_SUCCESS(vkAllocateDescriptorSets(m_device->logical_device, &rad_alloc_info, &m_radiance_descriptor_set)); // 分配skyBox描述符集合
     }
 
-
+    // 描述符布局设置
     void Scene::createVulkanDescriptorSetLayout(VkDevice device, std::vector<VkDescriptorSetLayoutBinding> bindings, VkDescriptorSetLayout& layout)
     {
         VkDescriptorSetLayoutCreateInfo layout_create_info = {};
@@ -465,7 +468,7 @@ namespace vv
         VV_CHECK_SUCCESS(vkCreateDescriptorSetLayout(device, &layout_create_info, nullptr, &layout));
     }
 
-
+    // 描述符布局设置绑定
     VkDescriptorSetLayoutBinding Scene::createDescriptorSetLayoutBinding(uint32_t binding, VkDescriptorType descriptor_type, uint32_t count, VkShaderStageFlags shader_stage) const
     {
         VkDescriptorSetLayoutBinding layout_binding = {};

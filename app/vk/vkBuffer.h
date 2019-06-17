@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANBUFFER_H
-#define VIRTUALVISTA_VULKANBUFFER_H
+#pragma once
 
 #include <vulkan\vulkan.h>
 #include <vector>
@@ -59,5 +57,3 @@ namespace vv
         void allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory);
     };
 }
-
-#endif // VIRTUALVISTA_VULKANBUFFER_H

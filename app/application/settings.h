@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_SETTINGS_H
-#define VIRTUALVISTA_SETTINGS_H
+#pragma once
 
 #include <string>
 
@@ -59,5 +58,3 @@ namespace vv
         Settings* operator=(const Settings& s) {};
     };
 }
-
-#endif // VIRTUALVISTA_SETTINGS_H

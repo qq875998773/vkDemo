@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_SKYBOX_H
-#define VIRTUALVISTA_SKYBOX_H
+#pragma once
 
 #include <array>
 #include <vector>
@@ -81,5 +80,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_SKYBOX_H

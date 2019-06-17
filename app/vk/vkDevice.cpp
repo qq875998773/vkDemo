@@ -3,6 +3,7 @@
 
 namespace vv
 {
+    // 创建设备初始化
     void VulkanDevice::create(VkPhysicalDevice device)
     {
         physical_device = device;
@@ -46,7 +47,7 @@ namespace vv
         queue_family_properties.clear();
     }
 
-
+    // 创建逻辑设备
     void VulkanDevice::createLogicalDevice(bool swap_chain_support, VkQueueFlags queue_types)
     {
         std::vector<VkDeviceQueueCreateInfo> device_queue_create_infos;

@@ -1,3 +1,4 @@
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -7,9 +8,6 @@
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/hash.hpp>
-
-#ifndef VIRTUALVISTA_UTILS_H
-#define VIRTUALVISTA_UTILS_H
 
 #define VV_SAFE_DELETE(p) {          \
         if (!p) {}                   \
@@ -347,4 +345,3 @@ namespace std
         }
     };
 }
-#endif

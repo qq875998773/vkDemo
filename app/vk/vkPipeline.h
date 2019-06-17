@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANPIPELINE_H
-#define VIRTUALVISTA_VULKANPIPELINE_H
+#pragma once
 
 #include <vector>
 
@@ -120,5 +118,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_VULKANPIPELINE_H

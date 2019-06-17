@@ -21,8 +21,8 @@ namespace vv
         m_window_width = 1920;
         m_window_height = 1080;
         m_aspect = m_window_width / static_cast<float>(m_window_height);
-        m_application_name = "VirtualVistaVulkan";
-        m_engine_name = "VirtualVista";
+        m_application_name = "vkDemo";
+        m_engine_name = "vkDemo engine";
         m_asset_directory = ROOTPROJECTDIR "/assets/";
         m_model_directory = m_asset_directory + "models/";
         m_texture_directory = m_asset_directory + "textures/";
@@ -53,13 +53,13 @@ namespace vv
         return m_aspect;
     }
 
-
+    // 获取应用程序名
     std::string Settings::getApplicationName() const
     {
         return m_application_name;
     }
 
-
+    // 获取引擎名
     std::string Settings::getEngineName() const
     {
         return m_engine_name;

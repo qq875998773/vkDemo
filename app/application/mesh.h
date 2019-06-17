@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_MESH_H
-#define VIRTUALVISTA_MESH_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -50,5 +49,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_MESH_H

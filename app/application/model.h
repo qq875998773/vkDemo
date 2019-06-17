@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_MODEL_H
-#define VIRTUALVISTA_MODEL_H
+#pragma once
 
 #include <string>
 
@@ -56,5 +55,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_MODEL_H

@@ -3,6 +3,7 @@
 
 namespace vv
 {
+    // 创建交换链
     void VulkanSwapChain::create(VulkanDevice* device, GLFWWindow* window)
     {
         VV_ASSERT(device != VK_NULL_HANDLE, "VulkanDevice not present");
@@ -15,7 +16,7 @@ namespace vv
         VkPresentModeKHR chosen_present_mode = chooseSurfacePresentMode(device);
         format = chosen_format.format;
 
-        // Swap Chain Extent
+        // 交换链扩展
         if (m_window->surface_settings[device].surface_capabilities.currentExtent.width == (uint32_t)-1)
         {
             // If the surface size is undefined, the size is set to the size of the images requested.

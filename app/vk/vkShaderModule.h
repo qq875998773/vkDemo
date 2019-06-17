@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANSHADERMODULE_H
-#define VIRTUALVISTA_VULKANSHADERMODULE_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -69,5 +67,3 @@ namespace vv
         void reflectDescriptorTypes(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage);
     };
 }
-
-#endif // VIRTUALVISTA_VULKANSHADERMODULE_H

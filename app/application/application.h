@@ -1,3 +1,5 @@
+#pragma once
+
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
@@ -20,10 +22,7 @@ namespace vv
         // 必须在执行结束时调用,以确保成功清除所有分配的资源
         void shutDown();
 
-        /*
-         * Returns the main scene which manages all entities with physical presence.
-         * Entities that should be rendered, cameras, and lights can be added through this central object.
-         */
+        // 获取场景 
         Scene* getScene() const;
 
         /*

@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_INPUTMANAGER_H
-#define VIRTUALVISTA_INPUTMANAGER_H
+#pragma once
 
 #include <vector>
 
@@ -40,5 +39,3 @@ namespace vv
         void scrollCallback(GLFWwindow* window, double x, double y);
     };
 }
-
-#endif // VIRTUALVISTA_INPUTMANAGER_H

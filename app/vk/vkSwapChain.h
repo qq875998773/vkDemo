@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANSWAPCHAIN_H
-#define VIRTUALVISTA_VULKANSWAPCHAIN_H
+#pragma once
 
 #include <vector>
 #include <algorithm>
@@ -73,5 +71,3 @@ namespace vv
         VkPresentModeKHR chooseSurfacePresentMode(VulkanDevice* device);
     };
 }
-
-#endif // VIRTUALVISTA_VULKANSWAPCHAIN_H

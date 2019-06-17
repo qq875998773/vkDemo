@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANIMAGE_H
-#define VIRTUALVISTA_VULKANIMAGE_H
+#pragma once
 
 #include <vector>
 #include <array>
@@ -135,5 +133,3 @@ namespace vv
             VkImageLayout old_layout, VkImageLayout new_layout);
     };
 }
-
-#endif // VIRTUALVISTA_VULKANIMAGE_H

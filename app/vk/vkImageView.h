@@ -1,6 +1,4 @@
-
-#ifndef VIRTUALVISTA_VULKANIMAGEVIEW_H
-#define VIRTUALVISTA_VULKANIMAGEVIEW_H
+#pragma once
 
 #include "vkDevice.h"
 #include "vkImage.h"
@@ -35,5 +33,3 @@ namespace vv
 
     };
 }
-
-#endif // VIRTUALVISTA_VULKANIMAGEVIEW_H

@@ -1,5 +1,4 @@
-#ifndef VIRTUALVISTA_VULKANDEVICE_H
-#define VIRTUALVISTA_VULKANDEVICE_H
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -17,7 +16,10 @@ namespace vv
     {
     public:
         // Settings and information related to the GPU itself. i.e. name, memory, whether there is VR support, etc.
+
+        // 物理设备
         VkPhysicalDevice physical_device = VK_NULL_HANDLE;
+        // 逻辑设备
         VkDevice logical_device = VK_NULL_HANDLE;
         VkPhysicalDeviceProperties physical_device_properties;
         VkPhysicalDeviceFeatures physical_device_features;
@@ -42,6 +44,7 @@ namespace vv
         /*
          * Creates all initial Vulkan internals.
          */
+        // 创建设备初始化
         void create(VkPhysicalDevice device);
 
         /*
@@ -69,6 +72,7 @@ namespace vv
          *
          * todo: this takes 1 second to complete... why?
          */
+        // 创建逻辑设备
         void createLogicalDevice(bool swap_chain_support = true, VkQueueFlags queue_types = VK_QUEUE_GRAPHICS_BIT);
 
         /*
@@ -101,5 +105,3 @@ namespace vv
         bool checkDeviceExtensionSupport(const char* extension);
     };
 }
-
-#endif // VIRTUALVISTA_VULKANDEVICE_H

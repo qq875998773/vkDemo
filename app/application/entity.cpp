@@ -1,4 +1,3 @@
-
 #include "entity.h"
 
 namespace vv
