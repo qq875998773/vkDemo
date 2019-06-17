@@ -94,13 +94,13 @@ namespace vv
         m_window->createSurface(m_instance);// 创建vk API和窗体连接
 
         DeferredRenderer::createDebugReportCallbackEXT(m_instance, vulkanDebugCallback, nullptr);
-        createVulkanDevices(); // 
+        createVulkanDevices();              // 创建vk设备
 
         m_swap_chain.create(&m_physical_device, m_window); // 创建交换链
 
-        m_render_pass.addAttachment
+        m_render_pass.addAttachment         // 添加附件
         (
-            m_swap_chain.format
+            m_swap_chain.format             // 交换链格式
             , VK_SAMPLE_COUNT_1_BIT
             , VK_ATTACHMENT_LOAD_OP_CLEAR
             , VK_ATTACHMENT_STORE_OP_STORE
@@ -110,9 +110,9 @@ namespace vv
             , VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
         );
 
-        m_render_pass.addAttachment
+        m_render_pass.addAttachment          // 添加附件 
         (
-            m_swap_chain.depth_image->format
+            m_swap_chain.depth_image->format // 深度图像格式
             , VK_SAMPLE_COUNT_1_BIT
             , VK_ATTACHMENT_LOAD_OP_CLEAR
             , VK_ATTACHMENT_STORE_OP_DONT_CARE
@@ -122,7 +122,7 @@ namespace vv
             , VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
         );
 
-        m_render_pass.create(&m_physical_device, VK_PIPELINE_BIND_POINT_GRAPHICS);
+        m_render_pass.create(&m_physical_device, VK_PIPELINE_BIND_POINT_GRAPHICS); // 创建渲染通道
 
         for (std::size_t i = 0; i < m_swap_chain.color_image_views.size(); ++i)
         {
@@ -264,16 +264,17 @@ namespace vv
         app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);      // 引擎版本
         app_info.apiVersion = VK_API_VERSION_1_0;               // API最低版本
 
-        // Ensure required extensions are found.
+        // 确保找到所需的扩展
         VV_ASSERT(checkInstanceExtensionSupport(), "Extensions requested, but are not available on this system.");
 
+        // 创建vk实例初始化
         VkInstanceCreateInfo instance_create_info = {};
         instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instance_create_info.pApplicationInfo = &app_info;
 
-        auto required_extensions = getRequiredExtensions();
+        auto required_extensions = getRequiredExtensions(); // 获取依赖扩展
         instance_create_info.enabledExtensionCount = static_cast<uint32_t>(required_extensions.size());
-        instance_create_info.ppEnabledExtensionNames = required_extensions.data();
+        instance_create_info.ppEnabledExtensionNames = required_extensions.data(); // 扩展名集
 
 #ifdef _DEBUG
         instance_create_info.enabledLayerCount = static_cast<uint32_t>(m_used_validation_layers.size());
@@ -282,10 +283,10 @@ namespace vv
         instance_create_info.enabledLayerCount = 0;
 #endif
 
-        VV_CHECK_SUCCESS(vkCreateInstance(&instance_create_info, nullptr, &m_instance));
+        VV_CHECK_SUCCESS(vkCreateInstance(&instance_create_info, nullptr, &m_instance)); // 创建vk实例
     }
 
-
+    // 获取依赖扩展
     std::vector<const char*> DeferredRenderer::getRequiredExtensions()
     {
         std::vector<const char*> extensions;
@@ -301,7 +302,7 @@ namespace vv
         return extensions;
     }
 
-
+    // 确保找到所需的扩展
     bool DeferredRenderer::checkInstanceExtensionSupport()
     {
         std::vector<const char*> required_extensions = getRequiredExtensions();

@@ -3,6 +3,7 @@
 
 namespace vv
 {
+    // 添加附件
     void VulkanRenderPass::addAttachment(VkFormat format,
         VkSampleCountFlagBits sample_count,
         VkAttachmentLoadOp load_op,
@@ -23,17 +24,19 @@ namespace vv
         attachment_description.initialLayout = input_layout;
         attachment_description.finalLayout = output_layout;
 
+        // 加入附件描述符集
         m_attachment_descriptions.push_back(attachment_description);
     }
 
-
+    // 创建渲染通道
     void VulkanRenderPass::create(VulkanDevice* device, VkPipelineBindPoint bind_point)
     {
         VV_ASSERT(device != nullptr, "Vulkan Device is NULL");
         m_device = device;
 
+        // 颜色检测附件
         std::vector<VkAttachmentReference> color_references;
-        VkAttachmentReference depth_reference;
+        VkAttachmentReference depth_reference; // 深度检测
         bool has_color = false;
         bool has_depth = false;
         uint32_t attachment_idx = 0;

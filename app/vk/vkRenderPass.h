@@ -18,6 +18,7 @@ namespace vv
         /*
          * Uses binded attachments to generate a VkRenderPass.
          */
+        // 创建渲染通道
         void create(VulkanDevice* device, VkPipelineBindPoint bind_point);
 
         /*
@@ -39,6 +40,7 @@ namespace vv
         /*
          * Before construction of the VkRenderPass can be completed, all necessary color, depth, stencil, etc image attachments should be added via this call.
          */
+        // 添加附件
         void addAttachment(VkFormat format,
             VkSampleCountFlagBits sample_count,
             VkAttachmentLoadOp load_op,
