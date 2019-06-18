@@ -15,7 +15,7 @@ namespace vv
         window_height = height;
         application_name = application_name;
 
-        //glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Don't use OpenGL
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // Don't use OpenGL, note:此处一行不能去掉,如果去掉N卡将有机率报错.
         //glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         window = glfwCreateWindow(window_width, window_height, application_name, nullptr, nullptr);
 
