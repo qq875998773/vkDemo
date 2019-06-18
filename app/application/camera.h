@@ -1,5 +1,4 @@
-//#ifndef VIRTUALVISTA_CAMERA_H
-//#define VIRTUALVISTA_CAMERA_H
+#pragma once
 
 #include <vector>
 
@@ -66,5 +65,3 @@ namespace vv
         virtual void rotate(float angle, glm::vec3 axis) {};
     };
 }
-
-//#endif // VIRTUALVISTA_CAMERA_H
