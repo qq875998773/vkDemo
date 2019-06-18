@@ -1,9 +1,13 @@
+
+
 #include <stdexcept>
 #include <chrono>
 
 #include "application.h"
 #include "inputManager.h"
 #include "settings.h"
+
+#include "imgui/imgui.h"
 
 namespace vv
 {
@@ -16,12 +20,15 @@ namespace vv
         // 创建窗体
         m_window.create(m_window_width, m_window_height, m_application_name);
 
+
         // todo: does this need to be malloced?
         m_renderer = new DeferredRenderer; // 新建渲染实例
 
         // 创建渲染初始化
         m_renderer->create(&m_window);
         m_scene = m_renderer->getScene();
+
+        debugWindow();
 
         // 消息提示
         std::cout << "Initialization Completed...\n";
@@ -79,6 +86,33 @@ namespace vv
             InputManager::inst()->getCursorGradient(delta_x, delta_y);
             camera->rotate(delta_x * rotate_speed, delta_y * rotate_speed);
         }
+    }
+
+    void Application::debugWindow()
+    {
+
+        ImGuiIO& io = ImGui::GetIO();
+
+        io.DisplaySize = ImVec2((float)1080, (float)720);
+        io.DeltaTime = 1.0f;
+
+        //io.MousePos = ImVec2(mousePos.x, mousePos.y);
+        //io.MouseDown[0] = mouseButtons.left;
+        //io.MouseDown[1] = mouseButtons.right;
+
+        ImGui::NewFrame();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        ImGui::SetNextWindowPos(ImVec2(10, 10));
+        ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+        ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        //ImGui::TextUnformatted(title.c_str());
+        //ImGui::TextUnformatted(deviceProperties.deviceName);
+        //ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
+
+        ImGui::End();
+        ImGui::PopStyleVar();
+        ImGui::Render();
     }
 
     // 开启主循环

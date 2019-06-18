@@ -14,7 +14,7 @@ namespace vv
         return m_instance;
     }
 
-
+    // …Ë÷√≥ı º÷µ
     void Settings::setDefault()
     {
         m_default = true;

@@ -6,6 +6,8 @@ set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
 
+#add_subdirectory(${DEPS_DIR}/imgui)
+
 add_definitions( -DROOTPROJECTDIR="${CMAKE_SOURCE_DIR}" )  # 定义ROOTPROJECTDIR为项目根路径
 
 include_directories("vk/"
@@ -98,6 +100,18 @@ set(PROJECT_SHADERS ${SHADER_DIR}/shader_info.txt
                     ${SHADER_DIR}/triangle.frag
                     ${SHADER_DIR}/triangle.vert)
 
+set(IMGUI_SORUCES
+    include/imgui/imconfig.h
+    include/imgui/imgui.cpp
+    include/imgui/imgui.h
+    include/imgui/imgui_demo.cpp
+    include/imgui/imgui_draw.cpp
+    include/imgui/imgui_internal.h
+    include/imgui/imgui_widgets.cpp
+    include/imgui/imstb_rectpack.h
+    include/imgui/imstb_textedit.h
+    include/imgui/imstb_truetype.h)
+
 
 # Vulkan shaders need compiling prior to running
 #if(MSVC)
@@ -118,17 +132,19 @@ source_group("application" FILES ${PROJECT_HEADERS})
 source_group("shaders" FILES ${PROJECT_SHADERS})
 source_group("app" FILES ${PROJECT_SOURCES})
 source_group("app\\vk" FILES ${PROJECT_VULKAN_SOURCES})
+source_group("app\\include\\imgui" FILES ${IMGUI_SORUCES})
 
 add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}\")
 
 add_executable(vkTest  ${PROJECT_SOURCES}
                        ${PROJECT_VULKAN_SOURCES}
                        ${PROJECT_HEADERS}
-                       ${PROJECT_SHADERS})
+                       ${PROJECT_SHADERS}
+					   ${IMGUI_SORUCES})
 
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
-target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp glfw3::glfw3)
+target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3)
 
 #set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
 

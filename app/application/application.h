@@ -7,6 +7,8 @@
 #include "glfwWindow.h"
 #include "scene.h"
 
+
+
 namespace vv
 {
     class Application
@@ -17,6 +19,8 @@ namespace vv
 
         // 初始化所有部件
         void create(int argc, char** argv);
+
+        void debugWindow();
 
         // 清除分配的资源
         // 必须在执行结束时调用,以确保成功清除所有分配的资源
