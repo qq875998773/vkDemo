@@ -6,8 +6,6 @@ set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
 
-#add_subdirectory(${DEPS_DIR}/imgui)
-
 add_definitions( -DROOTPROJECTDIR="${CMAKE_SOURCE_DIR}" )  # 定义ROOTPROJECTDIR为项目根路径
 
 include_directories("vk/"
@@ -15,6 +13,7 @@ include_directories("vk/"
                     "include/SPRIV-Cross/include/"
                     "include/gli/"
                     "include/stb/"
+                    "include/imgui/"
                     "include/tinyobjloader/"
                     "$ENV{VULKAN_SDK}/Include")
 
@@ -106,11 +105,12 @@ set(IMGUI_SORUCES
     include/imgui/imgui.h
     include/imgui/imgui_demo.cpp
     include/imgui/imgui_draw.cpp
+    include/imgui/imgui_impl_glfw_gl3.h
+    include/imgui/imgui_impl_glfw_gl3.cpp
     include/imgui/imgui_internal.h
-    include/imgui/imgui_widgets.cpp
-    include/imgui/imstb_rectpack.h
-    include/imgui/imstb_textedit.h
-    include/imgui/imstb_truetype.h)
+    include/imgui/stb_rect_pack.h
+    include/imgui/stb_textedit.h
+	include/imgui/stb_truetype.h)
 
 
 # Vulkan shaders need compiling prior to running
@@ -144,7 +144,7 @@ add_executable(vkTest  ${PROJECT_SOURCES}
 
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
-target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3)
+target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3 glew::glew)
 
 #set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
 
