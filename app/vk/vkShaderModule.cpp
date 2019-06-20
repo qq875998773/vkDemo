@@ -62,7 +62,6 @@ namespace vv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
     std::vector<char> VulkanShaderModule::loadSpirVBinary(std::string file_name)
     {
         std::ifstream file(file_name, std::ios::ate | std::ios::binary);
