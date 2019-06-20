@@ -7,7 +7,7 @@
 #include "inputManager.h"
 #include "settings.h"
 
-#include "imgui/imgui.h"
+#include "../include/imgui/imgui.h"
 
 namespace vv
 {
@@ -27,8 +27,6 @@ namespace vv
         // 创建渲染初始化
         m_renderer->create(&m_window);
         m_scene = m_renderer->getScene();
-
-        debugWindow();
 
         // 消息提示
         std::cout << "Initialization Completed...\n";
@@ -88,31 +86,104 @@ namespace vv
         }
     }
 
-    void Application::debugWindow()
+    void Application::imguiinit()
     {
-
+        // Init ImGui
+        ImGui::CreateContext();
+        // Color scheme
+        ImGuiStyle& style = ImGui::GetStyle();
+        style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+        style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+        style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.0f, 0.0f, 0.0f, 0.1f);
+        style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_Header] = ImVec4(0.8f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_HeaderActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_HeaderHovered] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_FrameBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.8f);
+        style.Colors[ImGuiCol_CheckMark] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+        style.Colors[ImGuiCol_SliderGrab] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+        style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(1.0f, 1.0f, 1.0f, 0.1f);
+        style.Colors[ImGuiCol_FrameBgActive] = ImVec4(1.0f, 1.0f, 1.0f, 0.2f);
+        style.Colors[ImGuiCol_Button] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        style.Colors[ImGuiCol_ButtonHovered] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+        style.Colors[ImGuiCol_ButtonActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+        // Dimensions
         ImGuiIO& io = ImGui::GetIO();
 
-        io.DisplaySize = ImVec2((float)1080, (float)720);
+        io.DisplaySize = ImVec2(((float)m_window_width), ((float)m_window_height));
         io.DeltaTime = 1.0f;
-
-        //io.MousePos = ImVec2(mousePos.x, mousePos.y);
-        //io.MouseDown[0] = mouseButtons.left;
-        //io.MouseDown[1] = mouseButtons.right;
+        //io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        // Create font texture
+        unsigned char* fontData;
+        int texWidth, texHeight;
+        std::string path = ROOTPROJECTDIR "/assets/Fonts/Roboto-Medium.ttf";
+        io.Fonts->AddFontFromFileTTF(path.data(), 16.0f);
+        io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
+        io.FontGlobalScale = 1.0f;
 
         ImGui::NewFrame();
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-        ImGui::SetNextWindowPos(ImVec2(10, 10));
-        ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
-        ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
-        //ImGui::TextUnformatted(title.c_str());
-        //ImGui::TextUnformatted(deviceProperties.deviceName);
-        //ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
+        ImGui::ShowDemoWindow();
 
-        ImGui::End();
-        ImGui::PopStyleVar();
+        //ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        //ImGui::SetNextWindowPos(ImVec2(10, 10));
+        //ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+        //ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ////ImGui::TextUnformatted(title.c_str());
+        ////ImGui::TextUnformatted(deviceProperties.deviceName);
+        ////ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
+
+        //ImGui::PushItemWidth(110.0f * 1.0f);
+        //ImGui::CollapsingHeader("Settings", ImGuiTreeNodeFlags_DefaultOpen);
+        //bool animate = true;
+        //ImGui::Checkbox("Moving attractor", &animate);
+        //ImGui::PopItemWidth();
+
+        //ImGui::End();
+        //ImGui::PopStyleVar();
         ImGui::Render();
+
+    }
+
+    void Application::debugWindow()
+    {
+
+        imguiinit();
+        //// Color scheme
+        //ImGuiStyle& style = ImGui::GetStyle();
+        //style.Colors[ImGuiCol_TitleBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.6f);
+        //style.Colors[ImGuiCol_TitleBgActive] = ImVec4(1.0f, 0.0f, 0.0f, 0.8f);
+        //style.Colors[ImGuiCol_MenuBarBg] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        //style.Colors[ImGuiCol_Header] = ImVec4(1.0f, 0.0f, 0.0f, 0.4f);
+        //style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+        //// Dimensions
+        //ImGuiIO& io = ImGui::GetIO();
+        //io.DisplaySize = ImVec2(1080.f, 720.f);
+        //io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+        //io.Fonts->GetTexDataAsRGBA32(()
+        //io.FontGlobalScale = 1.0f;
+
+
+        //ImGui::NewFrame();
+
+        //
+
+        ////io.MousePos = ImVec2(mousePos.x, mousePos.y);
+        ////io.MouseDown[0] = mouseButtons.left;
+        ////io.MouseDown[1] = mouseButtons.right;
+
+        //ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        //ImGui::SetNextWindowPos(ImVec2(10, 10));
+        //ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiSetCond_FirstUseEver);
+        //ImGui::Begin("Vulkan Example", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+        ////ImGui::TextUnformatted(title.c_str());
+        ////ImGui::TextUnformatted(deviceProperties.deviceName);
+        ////ImGui::Text("%.2f ms/frame (%.1d fps)", (1000.0f / lastFPS), lastFPS);
+
+        //ImGui::End();
+        //ImGui::PopStyleVar();
+        //ImGui::Render();
     }
 
     // 开启主循环
@@ -134,6 +205,8 @@ namespace vv
             mouseInput(delta_time);
 
             m_renderer->run(delta_time);
+
+            //debugWindow();
         }
     }
 }

@@ -20,6 +20,7 @@ namespace vv
         // 初始化所有部件
         void create(int argc, char** argv);
 
+        void imguiinit();
         void debugWindow();
 
         // 清除分配的资源
@@ -33,6 +34,9 @@ namespace vv
          * Signals the Vulkan engine to construct render commands and begins all central processing.
          */
         void beginMainLoop();
+
+        float getWindowWidth();
+        float getWindowHeight();
 
     private:
         int m_argc;

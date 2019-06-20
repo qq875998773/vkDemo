@@ -1,8 +1,6 @@
 ﻿# Add source to this project's executable.
 set(SHADER_DIR ${PROJECT_SOURCE_DIR}/assets/shaders)
 set(DEPS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-#set(SRC_DIR ${PROJECT_SOURCE_DIR}/app)
-#set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/application)
 
 add_subdirectory(${DEPS_DIR}/SPIRV-Cross)
 
@@ -105,12 +103,11 @@ set(IMGUI_SORUCES
     include/imgui/imgui.h
     include/imgui/imgui_demo.cpp
     include/imgui/imgui_draw.cpp
-    include/imgui/imgui_impl_glfw_gl3.h
-    include/imgui/imgui_impl_glfw_gl3.cpp
     include/imgui/imgui_internal.h
-    include/imgui/stb_rect_pack.h
-    include/imgui/stb_textedit.h
-	include/imgui/stb_truetype.h)
+    include/imgui/imgui_widgets.cpp
+    include/imgui/imstb_rectpack.h
+    include/imgui/imstb_textedit.h
+    include/imgui/imstb_truetype.h)
 
 
 # Vulkan shaders need compiling prior to running
@@ -144,12 +141,12 @@ add_executable(vkTest  ${PROJECT_SOURCES}
 
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
-target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3 glew::glew)
+target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3)
 
 #set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
+
 
 add_custom_command(TARGET vkTest POST_BUILD        # 拷贝DLL到运行目录
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${GLFW3_DLL}
-        $<TARGET_FILE_DIR:vkTest>
-)
+        $<TARGET_FILE_DIR:vkTest>)
