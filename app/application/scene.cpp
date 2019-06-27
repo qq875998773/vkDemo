@@ -136,7 +136,7 @@ namespace vv
         return &m_skyboxes[m_skyboxes.size() - 1];
     }
 
-
+    // 获取活动的摄像机
     Camera* Scene::getActiveCamera() const
     {
         return m_active_camera;
@@ -321,7 +321,7 @@ namespace vv
         file.close();
     }
 
-
+    // 创建描述符池
     void Scene::createDescriptorPool()
     {
         std::array<VkDescriptorPoolSize, 2> pool_sizes = {};

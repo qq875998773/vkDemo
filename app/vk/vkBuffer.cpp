@@ -78,6 +78,7 @@ namespace vv
             util::endSingleUseCommand(m_device->logical_device, command_pool_used, command_buffer, m_device->graphics_queue);
     }
 
+    // ∑÷≈‰ƒ⁄¥Ê
     void VulkanBuffer::allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory)
     {
         // Create the Vulkan abstraction for a vertex buffer.

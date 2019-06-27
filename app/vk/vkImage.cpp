@@ -4,7 +4,6 @@
 
 namespace vv
 {
-    ///////////////////////////////////////////////////////////////////////////////////////////// Public
     VulkanImage::VulkanImage()
     {
     }
@@ -34,6 +33,7 @@ namespace vv
             flags, initial_layout, sample_count, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, m_image_memory);
     }
 
+    // 
     void VulkanImage::createFromImage(VulkanDevice* device, VkImage image, VkFormat format, VkImageAspectFlags aspect_flags,
         uint32_t mip_levels, uint32_t array_layers)
     {
@@ -172,7 +172,6 @@ namespace vv
     }
 
 
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
     void VulkanImage::allocateTransferMemory(VkDeviceSize size_in_bytes)
     {
         VkBufferCreateInfo buffer_create_info = {};

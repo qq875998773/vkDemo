@@ -20,7 +20,6 @@ namespace vv
         // 创建窗体
         m_window.create(m_window_width, m_window_height, m_application_name);
 
-
         // todo: does this need to be malloced?
         m_renderer = new DeferredRenderer; // 新建渲染实例
 

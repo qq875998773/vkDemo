@@ -139,12 +139,22 @@ add_executable(vkTest  ${PROJECT_SOURCES}
                        ${PROJECT_SHADERS}
 					   ${IMGUI_SORUCES})
 
+add_executable(oldmain oldmain.cpp)
+
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
 target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3)
 
-#set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
+target_include_directories(oldmain PUBLIC "include")
+target_link_libraries(oldmain Vulkan::Vulkan glfw3::glfw3)
 
+
+add_custom_command(TARGET oldmain POST_BUILD        # 拷贝DLL到运行目录
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${GLFW3_DLL}
+        $<TARGET_FILE_DIR:oldmain>)
+
+#set_target_properties(vkTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build") # 输出项目exe
 
 add_custom_command(TARGET vkTest POST_BUILD        # 拷贝DLL到运行目录
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

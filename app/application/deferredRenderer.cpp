@@ -234,7 +234,7 @@ namespace vv
         }
     }
 
-
+    // ªÒ»°≥°æ∞
     Scene* DeferredRenderer::getScene() const
     {
         return (Scene*)& m_scene;

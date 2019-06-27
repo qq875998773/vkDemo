@@ -54,6 +54,7 @@ namespace vv
         /*
          * Creates the Vulkan abstraction for a data buffer with the given specifications.
          */
+        // ∑÷≈‰ƒ⁄¥Ê
         void allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory);
     };
 }

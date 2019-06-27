@@ -385,7 +385,7 @@ private:
         createSurface();            // 创建窗体和vulkan实例连接
         pickPhysicalDevice();       // 连接物理设备
         createLogicalDevice();      // 创建逻辑设备
-        createSwapChain();          // 交换链
+        createSwapChain();          // 创建交换链
         createImageViews();         // 创建图像视图
         createRenderPass();         // 创建渲染通道
         createDescriptorSetLayout();// 创建描述符设置布局 uniform buffer布局

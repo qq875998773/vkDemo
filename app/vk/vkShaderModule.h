@@ -31,7 +31,7 @@ namespace vv
         void create(VulkanDevice* device, std::string name, std::string stage, std::string entrance_function);
 
         /*
-         *
+         * 
          */
         void shutDown();
 

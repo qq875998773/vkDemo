@@ -9,7 +9,6 @@
 
 namespace vv
 {
-    ///////////////////////////////////////////////////////////////////////////////////////////// Public
     std::vector<uint32_t> convert(std::vector<char> buf)
     {
         std::vector<uint32_t> output(buf.size() / sizeof(uint32_t));
@@ -98,6 +97,7 @@ namespace vv
         }
 
         // Get all sampled uniform buffers in the shader.
+        // 获取全部全局采样缓冲区shader
         for (auto& resource : resources.uniform_buffers)
         {
             unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
@@ -124,6 +124,7 @@ namespace vv
         }
 
         // Get all sampled images in the shader.
+        // 获取全部采样图像shader
         for (auto& resource : resources.sampled_images)
         {
             unsigned set = glsl.get_decoration(resource.id, spv::DecorationDescriptorSet);
