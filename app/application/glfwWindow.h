@@ -9,7 +9,7 @@
 #include "inputManager.h"
 #include "vkUtils.hpp"
 
-namespace vv
+namespace Engine
 {
     struct VulkanDevice;
 

@@ -17,7 +17,7 @@
 #include <Windows.h>
 #endif
 
-namespace vv
+namespace Engine
 {
     VKAPI_ATTR VkBool32 VKAPI_CALL
         vulkanDebugCallback(VkDebugReportFlagsEXT flags,

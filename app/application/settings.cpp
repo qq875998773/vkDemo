@@ -1,6 +1,6 @@
 #include "settings.h"
 
-namespace vv
+namespace Engine
 {
     Settings* Settings::m_instance = nullptr;
 

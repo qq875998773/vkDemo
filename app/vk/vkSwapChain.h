@@ -12,7 +12,7 @@
 #define NOMINMAX
 #endif
 
-namespace vv
+namespace Engine
 {
     struct VulkanSwapChain
     {

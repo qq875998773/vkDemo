@@ -10,7 +10,7 @@
 #include "settings.h"
 #include "vkUtils.hpp"
 
-namespace vv
+namespace Engine
 {
     class VulkanDevice
     {

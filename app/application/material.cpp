@@ -1,6 +1,6 @@
 #include "material.h"
 
-namespace vv
+namespace Engine
 {
     Material::Material()
     {
@@ -25,7 +25,7 @@ namespace vv
             alloc_info.descriptorPool = descriptor_pool;
             alloc_info.descriptorSetCount = 1;
             alloc_info.pSetLayouts = &material_template->material_descriptor_set_layout;
-
+             
             VV_CHECK_SUCCESS(vkAllocateDescriptorSets(device->logical_device, &alloc_info, &m_descriptor_set));
         }
     }

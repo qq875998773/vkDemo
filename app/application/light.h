@@ -4,7 +4,7 @@
 
 #include "entity.h"
 
-namespace vv
+namespace Engine
 {
     class Light : public Entity
     {

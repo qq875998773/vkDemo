@@ -4,7 +4,7 @@
 
 #define VV_MAX_LIGHTS 5
 
-namespace vv
+namespace Engine
 {
     // todo: offload default settings to file. Read at application start.
     class Settings

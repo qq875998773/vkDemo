@@ -5,7 +5,7 @@
 
 #include "application.h"
 
-using namespace vv;
+using namespace Engine;
 
 int main(int argc, char* argv[])
 {

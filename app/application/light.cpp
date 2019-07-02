@@ -1,7 +1,7 @@
 
 #include "light.h"
 
-namespace vv
+namespace Engine
 {
     Light::Light()
     {

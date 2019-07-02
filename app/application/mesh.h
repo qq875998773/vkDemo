@@ -6,7 +6,7 @@
 #include "vkDevice.h"
 #include "vkBuffer.h"
 
-namespace vv
+namespace Engine
 {
     class Mesh
     {

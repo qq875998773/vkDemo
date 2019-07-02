@@ -2073,7 +2073,7 @@ static int stbtt__run_charstring(const stbtt_fontinfo *info, int glyph_index, st
 
       case 0x1A: // vvcurveto
       case 0x1B: // hhcurveto
-         if (sp < 4) return STBTT__CSERR("(vv|hh)curveto stack");
+         if (sp < 4) return STBTT__CSERR("(Engine|hh)curveto stack");
          f = 0.0;
          if (sp & 1) { f = s[i]; i++; }
          for (; i + 3 < sp; i += 4) {

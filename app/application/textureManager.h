@@ -8,7 +8,7 @@
 #include "vkDevice.h"
 #include "vkImageView.h"
 
-namespace vv
+namespace Engine
 {
     struct SampledTexture
     {

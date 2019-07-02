@@ -8,7 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-namespace vv
+namespace Engine
 {
     void Camera::create(float fov, float near_plane, float far_plane)
     {

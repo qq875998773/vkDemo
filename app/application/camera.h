@@ -5,7 +5,7 @@
 #include "entity.h"
 #include "vkUtils.hpp"
 
-namespace vv
+namespace Engine
 {
     class Camera : public Entity
     {

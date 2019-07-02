@@ -1,7 +1,7 @@
 
 #include "vkBuffer.h"
 
-namespace vv
+namespace Engine
 {
     VulkanBuffer::VulkanBuffer()
     {

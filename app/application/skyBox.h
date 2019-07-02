@@ -8,7 +8,7 @@
 #include "mesh.h"
 #include "textureManager.h"
 
-namespace vv
+namespace Engine
 {
     class SkyBox
     {

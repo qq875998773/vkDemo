@@ -5,7 +5,7 @@
 #include "settings.h"
 #include "vkUtils.hpp"
 
-namespace vv
+namespace Engine
 {
     // ´´½¨´°Ìå
     void GLFWWindow::create(const int width, const int height, const char* application_name)

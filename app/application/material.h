@@ -10,7 +10,7 @@
 #include "vkShaderModule.h"
 #include "textureManager.h"
 
-namespace vv
+namespace Engine
 {
     struct MaterialTemplate
     {

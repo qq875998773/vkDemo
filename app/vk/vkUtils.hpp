@@ -19,7 +19,7 @@
 #include <Windows.h>
 #endif
 
-namespace vv
+namespace Engine
 {
 #ifdef _DEBUG
 
@@ -337,9 +337,9 @@ namespace vv
 
 namespace std
 {
-    template<> struct hash<vv::Vertex>
+    template<> struct hash<Engine::Vertex>
     {
-        size_t operator()(vv::Vertex const& vertex) const
+        size_t operator()(Engine::Vertex const& vertex) const
         {
             return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.texCoord) << 1);
         }

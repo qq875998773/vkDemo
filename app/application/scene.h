@@ -16,7 +16,7 @@
 #include "model.h"
 #include "camera.h"
 
-namespace vv
+namespace Engine
 {
     class Scene
     {

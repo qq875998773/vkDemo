@@ -4,7 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-namespace vv
+namespace Engine
 {
     class InputManager
     {

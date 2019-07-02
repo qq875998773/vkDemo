@@ -1,6 +1,6 @@
 #include "entity.h"
 
-namespace vv
+namespace Engine
 {
     Entity::Entity() :
         m_pose(glm::mat4())
