@@ -3,7 +3,6 @@
 
 namespace Engine
 {
-    ///////////////////////////////////////////////////////////////////////////////////////////// Public
     VulkanPipeline::VulkanPipeline()
     {
     }
@@ -82,6 +81,7 @@ namespace Engine
         VV_CHECK_SUCCESS(vkCreateComputePipelines(m_device->logical_device, VK_NULL_HANDLE, 1, &compute_pipeline_create_info, nullptr, &pipeline));
     }
 
+    // Ìí¼Óshader½×¶Î
     bool VulkanPipeline::addShaderStage(VulkanShaderModule& shader_module)
     {
         VkPipelineShaderStageCreateInfo shader_create_info = {};
@@ -245,6 +245,4 @@ namespace Engine
         return false;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////// Private
 }

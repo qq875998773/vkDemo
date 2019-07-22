@@ -22,7 +22,7 @@ namespace Engine
         std::string getShaderDirectory() const;
         std::string getAssetDirectory() const;
         std::string getModelDirectory() const;
-        std::string getTextureDirectory() const;
+        std::string getTextureDirectory() const; // 获取纹理路径
 
         bool isComputeRequired() const;
 

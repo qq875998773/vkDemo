@@ -5,6 +5,8 @@ cmake_minimum_required (VERSION 3.8) # cmake 最低版本
 
 project ("VKDemo") # 项目名
 
+add_definitions(-DRESOURCE_PATH="${PROJECT_SOURCE_DIR}")
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake") # 追加cmake目录
 
 find_package(Vulkan REQUIRED) # vulkan依赖 因为系统安装了vulkan所以不需要把文件放到项目目录

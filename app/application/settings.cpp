@@ -23,7 +23,7 @@ namespace Engine
         m_aspect = m_window_width / static_cast<float>(m_window_height);
         m_application_name = "vkDemo";
         m_engine_name = "vkDemo engine";
-        m_asset_directory = ROOTPROJECTDIR "/assets/";
+        m_asset_directory = ROOTPROJECTDIR "/assets/"; // CmakeLists.txt里定义的变量
         m_model_directory = m_asset_directory + "models/";
         m_texture_directory = m_asset_directory + "textures/";
         m_shader_directory = m_asset_directory + "shaders/";
@@ -83,7 +83,7 @@ namespace Engine
         return m_model_directory;
     }
 
-
+    // 获取纹理路径
     std::string Settings::getTextureDirectory() const
     {
         return m_texture_directory;

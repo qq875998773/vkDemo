@@ -108,7 +108,7 @@ namespace Engine
         return &m_models[m_models.size() - 1];
     }
 
-
+    // 添加摄像机
     Camera* Scene::addCamera(float fov_y, float near_plane, float far_plane)
     {
         VV_ASSERT(m_initialized, "ERROR: scene needs to be initialized before adding cameras");
@@ -118,7 +118,7 @@ namespace Engine
         return &m_cameras[m_cameras.size() - 1];
     }
 
-
+    // 添加天空盒子
     SkyBox* Scene::addSkyBox(std::string path, std::string radiance_map_name, std::string diffuse_map_name,
         std::string specular_map_name, std::string brdf_lut_name)
     {
@@ -184,12 +184,13 @@ namespace Engine
             m.updateModelUBO();
     }
 
-    // 渲染
+    // 渲染场景
     void Scene::render(VkCommandBuffer command_buffer)
     {
         bool first_run = true;
         MaterialTemplate* curr_template = nullptr;
 
+        // 如果有活动的天空盒
         if (m_has_active_skybox)
         {
             auto skybox_template = material_templates["skybox"];
@@ -200,7 +201,7 @@ namespace Engine
             m_active_skybox->render(command_buffer);
         }
 
-        // 循环每个模型
+        // 循环模型集合
         int i = 0;
         for (auto& model : m_models)
         {
@@ -232,7 +233,7 @@ namespace Engine
         }
     }
 
-    // 材质模板集
+    // 创建材质模板集
     void Scene::createMaterialTemplates()
     {
         std::string shader_file = Settings::inst()->getShaderDirectory() + "shader_info.txt";

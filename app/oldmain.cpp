@@ -37,8 +37,8 @@
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
 
-const std::string MODEL_PATH = "../resources/models/chalet.obj";     // obj模型路径
-const std::string TEXTURE_PATH = "../resources/textures/chalet.jpg"; // 纹理图片路径
+const std::string MODEL_PATH = RESOURCE_PATH "/resources/models/chalet.obj";     // obj模型路径
+const std::string TEXTURE_PATH = RESOURCE_PATH "/resources/textures/chalet.jpg"; // 纹理图片路径
 
 #pragma region 鼠标键盘操作
 bool     g_is_left_pressed = false;  // 键盘A
@@ -941,8 +941,8 @@ private:
     void createGraphicsPipeline()
     {
         // 加载顶点shader和片元shader
-        auto vertShaderCode = readFile("../shaders/shader.vert.spv");
-        auto fragShaderCode = readFile("../shaders/shader.frag.spv");
+        auto vertShaderCode = readFile(RESOURCE_PATH "/shaders/shader.vert.spv");
+        auto fragShaderCode = readFile(RESOURCE_PATH "/shaders/shader.frag.spv");
 
         // 在将shader传递给渲染管线之前,必须将其封装到VkShaderModule对象中
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);

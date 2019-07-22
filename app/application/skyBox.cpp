@@ -6,12 +6,11 @@ namespace Engine
     {
     }
 
-
     SkyBox::~SkyBox()
     {
     }
 
-
+    // 创建天空盒子
     void SkyBox::create(VulkanDevice* device, VkDescriptorSet radiance_descriptor_set, VkDescriptorSet environment_descriptor_set,
         Mesh* mesh, SampledTexture* radiance_map, SampledTexture* diffuse_map, SampledTexture* specular_map,
         SampledTexture* brdf_lut)

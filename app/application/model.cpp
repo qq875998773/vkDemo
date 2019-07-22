@@ -36,7 +36,7 @@ namespace Engine
         delete m_model_uniform_buffer;
     }
 
-
+    // 更新模型全局缓冲区对象
     void Model::updateModelUBO()
     {
         m_model_ubo = { m_pose, glm::transpose(glm::inverse(m_pose)) };

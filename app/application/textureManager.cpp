@@ -108,7 +108,7 @@ namespace Engine
         return nullptr;
     }
 
-
+    // º”‘ÿÃÏø’∫–map
     SampledTexture* TextureManager::loadCubeMap(std::string path, std::string name, VkFormat format, bool create_mip_levels)
     {
         std::string file_type = name.substr(name.find_first_of('.') + 1);
@@ -137,6 +137,10 @@ namespace Engine
                 VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, mip_levels, 6, VK_IMAGE_VIEW_TYPE_CUBE);
 
             return m_loaded_textures[path + name];
+        }
+        else if(file_type == "hdr")
+        {
+
         }
 
         return nullptr;
