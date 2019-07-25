@@ -44,7 +44,11 @@ int main(int argc, char* argv[])
     //model->scale(glm::vec3(0.01f, 0.01f, 0.01f));
 
     // วน
-    Model* gun = scene->addModel("9mm_Pistol/", "9mm_Pistol.obj", "PBR_IBL");
+    //Model* gun = scene->addModel("9mm_Pistol/", "9mm_Pistol.obj", "PBR_IBL");
+    //gun->translate(glm::vec3(1.0f, 0.0f, 0.0f));
+
+    // บ๛ต๛
+    Model* gun = scene->addModel("hudie/", "hudie.obj", "PBR_IBL");
     gun->translate(glm::vec3(1.0f, 0.0f, 0.0f));
 
     // วน

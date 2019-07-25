@@ -2,7 +2,7 @@
  * 这是学习初期写的一个面向过程的demo代码,现已废弃
  * 这段代码是可运行无错的,可以用它绘制一个房子
  * 也可以修改initVulkan里的模型加载方法使其绘制球体
- * 如有问题欢迎加QQ群交流,群号：1017638604 
+ * 如有问题欢迎加QQ群交流,群号：1017638604
  *****************************************************/
 
 #define GLFW_INCLUDE_VULKAN
@@ -33,12 +33,19 @@
 #include <unordered_map>
 #include "vulkan/vulkan.hpp" // 面向对象调用方式
 
+#include "oldMaterial.hpp"
+
 
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
 
-const std::string MODEL_PATH = RESOURCE_PATH "/resources/models/chalet.obj";     // obj模型路径
-const std::string TEXTURE_PATH = RESOURCE_PATH "/resources/textures/chalet.jpg"; // 纹理图片路径
+//const std::string MODEL_PATH = RESOURCE_PATH "/resources/models/chalet.obj";     // obj模型路径
+//const std::string TEXTURE_PATH = RESOURCE_PATH "/resources/textures/chalet.jpg"; // 纹理图片路径
+//const std::string BASE_PATH = RESOURCE_PATH  "/resources/models";                // obj模型文件夹路径
+
+const std::string MODEL_PATH = "C:/Users/CC/Desktop/hudie/hudie.obj";   // obj模型路径
+const std::string TEXTURE_PATH = "C:/Users/CC/Desktop/hudie/20140107105309838151.jpg"; // 纹理图片路径
+const std::string BASE_PATH = "C:/Users/CC/Desktop/hudie/";    // obj模型文件夹路径
 
 #pragma region 鼠标键盘操作
 bool     g_is_left_pressed = false;  // 键盘A
@@ -156,7 +163,7 @@ const bool enableValidationLayers = true;
 
 // 创建调试回调
 VkResult CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo,
-                                      const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback)
+    const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback)
 {
     auto func = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
     if (func != nullptr)
@@ -271,8 +278,8 @@ namespace std
     {
         size_t operator()(Vertex const& vertex) const
         {
-            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ 
-                   (hash<glm::vec2>()(vertex.texCoord) << 1) ^ (hash<glm::vec3>()(vertex.normal) << 1);
+            return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                (hash<glm::vec2>()(vertex.texCoord) << 1) ^ (hash<glm::vec3>()(vertex.normal) << 1);
         }
     };
 }
@@ -822,7 +829,7 @@ private:
         colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;// stencilStoreOp应用在模版数据,这里不做任何模版缓冲区操作,所以storing无关紧要
         // 指定图像在开始进入渲染通道render pass前将要使用的布局,VK_IMAGE_LAYOUT_UNDEFINED意为不关心图像之前的布局.
         // 特殊值表明图像的内容不确定会被保留,但是这并不重要,因为无论如何都要清理它,像渲染完毕后使用交换链进行呈现
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; 
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR; // 指定当渲染通道结束自动变换时使用的布局,VK_IMAGE_LAYOUT_PRESENT_SRC_KHR图像在交换链中被呈现
         /*
         VK_IMAGE_LAYOUT_COLOR_ATTACHMET_OPTIMAL: 图像作为颜色附件
@@ -838,7 +845,7 @@ private:
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;// 同上
         depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; 
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         /* VkAttachmentReference
@@ -877,7 +884,7 @@ private:
         dependency.srcSubpass = VK_SUBPASS_EXTERNAL; // VK_SUBPASS_EXTERNAL指在渲染通道之前或之后的隐式子通道,取决于它是否在srcSubpass或dstSubPass中指定
         dependency.dstSubpass = 0; // 索引0指定子通道,这是第一个也是唯一的,dstSubpass必须始终高于srcSubPass以防止依赖关系出现循环
         // 指定要等待的操作和这些操作发生的阶段,在访问对象之前,需要等待交换链完成对应图像的读取操作,这可以通过等待颜色附件输出的阶段来实现
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT; 
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
         dependency.srcAccessMask = 0;
         dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;// 指定要等待的操作和这些操作发生的阶段
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;// 颜色附件阶段操作及涉及颜色附件的读写的操作应该等待
@@ -1032,7 +1039,7 @@ private:
         VK_POLYGON_MODE_POINT: 多边形顶点作为描点绘制
         */
         //使用任何模式填充都需开启GPU功能,lineWidth成员是直接填充的,根据片元的数量描述线的宽度.最大的线宽支持取决于硬件,任何大于1.0的线宽需要开启GPU的wideLines特性支持
-        rasterizer.lineWidth = 1.0f; 
+        rasterizer.lineWidth = 1.0f;
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT; // cullMode变量用于决定面裁剪的类型方式.可以禁止culling,裁剪front faces,cull back faces 或者全部
         rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; // frontFace用于描述作为front-facing面的顶点的顺序,可以是顺时针也可以是逆时针
         rasterizer.depthBiasEnable = VK_FALSE;  // 光栅器可以通过添加常量或者基于片元的斜率来更改深度值.有时对于阴影贴图是有用的,这里不使用,所以设置为VK_FALSE
@@ -1066,7 +1073,7 @@ private:
         // 掩码会用确定帧缓冲区中具体哪个通道的颜色受到影响
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         // 如果设为VK_FALSE,那么从片段着色器输出的新颜色不会发生变化,否则两个混色操作会计算新的颜色.所得到的结果与colorWriteMask进行AND运算,以确定实际传递的通道
-        colorBlendAttachment.blendEnable = VK_FALSE; 
+        colorBlendAttachment.blendEnable = VK_FALSE;
         // blendEnable,大多数的情况下使用混色用于实现alpha blending,新的颜色与旧的颜色进行混合会基于它们的opacity透明通道.finalColor作为最终的输出
 
         // 全局混色的设置 持有所有帧缓冲区的引用,它允许设置混合操作的常量,该常量可以作为后续计算的混合因子
@@ -1185,8 +1192,8 @@ private:
         VkFormat depthFormat = findDepthFormat();
 
         // 创建图像
-        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, 
-                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
+        createImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory);
         // 深度图像视图
         depthImageView = createImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -1236,7 +1243,7 @@ private:
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
-    // 创建加载纹理图片
+    // 创建纹理图像
     void createTextureImage()
     {
         int texWidth, texHeight, texChannels;
@@ -1263,8 +1270,8 @@ private:
         stbi_image_free(pixels); // 清理原图像的像素数据
 
         // 创建贴图图像
-        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, 
-                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+        createImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
 
         // 处理布局变换
         transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -1356,8 +1363,8 @@ private:
     }
 
     // 创建贴图图像
-    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, 
-                     VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
+    void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage,
+        VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory)
     {
         // 图片初始化
         VkImageCreateInfo imageInfo = {};
@@ -1549,10 +1556,14 @@ private:
         std::vector<tinyobj::material_t> materials;
         std::string err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str()))
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, MODEL_PATH.c_str(), BASE_PATH.c_str()))
         {
             throw std::runtime_error(err);
         }
+
+        // 先获取所有的materials大小用来分配bufer
+
+
 
         std::unordered_map<Vertex, uint32_t> uniqueVertices = {};
 
@@ -1571,8 +1582,9 @@ private:
                 };
 
                 vertex.texCoord =
-                {  // 本项目中,使用坐标从左上角0,0到右下角的1,1来映射纹理,从而简单的填充矩形.在这里可以尝试各种坐标.可以尝试使用低于0或者1以上的坐标来查看寻址模式的不同表现
-                   // Vulkan的纹理坐标的起点是左上角,而OBJ格式则是左下角.通过反转纹理坐标的垂直分量来解决这个问题
+                {  // 本项目中,使用坐标从左上角0,0到右下角的1,1来映射纹理,从而简单的填充矩形.在这里可以尝试各种坐标.
+                   // 可以尝试使用低于0或者1以上的坐标来查看寻址模式的不同表现.
+                   // Vulkan的纹理坐标的起点是左上角,而OBJ格式则是左下角.通过反转纹理坐标的垂直分量来解决这个问题.
                     attrib.texcoords[(uint64_t)2 * index.texcoord_index + 0],
                     1.0f - attrib.texcoords[(uint64_t)2 * index.texcoord_index + 1]
                 };
@@ -1590,6 +1602,19 @@ private:
             }
         }
     }
+
+    /*
+     * 一个obj model可能会把一个贴图压缩到一个图片文件里，这样只需要创建一个imagebuffer
+     * 也可能每个面的纹理贴图会放到不同的图片文件里，这时就需要通过同文件夹下的mtl文件解析了.
+     * mtl文件可以存许多属性比如：阴影，反射，高光贴图，菲涅尔，凸凹贴图，透明度折射率等
+     * 这里只先取纹理贴图，存到不同的buffer里
+     */
+    // obj材质的uv贴图
+    void objMaterialsUV(tinyobj::material_t const& material, std::string const& basepath)
+    {
+
+    }
+
 
     // 画球
     void loadModel2()
@@ -1745,6 +1770,7 @@ private:
             }
         }
     }
+
 
     // 创建顶点缓冲区
     void createVertexBuffer()
@@ -2113,9 +2139,9 @@ private:
         float  i_xpos = g_mouse_delta.x;
         float  i_ypos = g_mouse_delta.y;
         position = glm::vec3(position.x * std::cos(-speed * i_xpos) - position.y * std::sin(-speed * i_xpos),
-                             position.x * std::sin(-speed * i_xpos) + position.y * std::cos(-speed * i_xpos), position.z);
+            position.x * std::sin(-speed * i_xpos) + position.y * std::cos(-speed * i_xpos), position.z);
         position = glm::vec3(position.x, position.y * std::cos(speed * i_ypos) - position.z * std::sin(speed * i_ypos),
-                             position.y * std::sin(speed * i_ypos) + position.z * std::cos(speed * i_ypos));
+            position.y * std::sin(speed * i_ypos) + position.z * std::cos(speed * i_ypos));
         if (g_is_scroll_delta && FoV - g_scroll_delta.y > 0.f && FoV - g_scroll_delta.y < 90.f)
         {
             FoV = FoV - g_scroll_delta.y;
@@ -2527,7 +2553,7 @@ private:
 
     // debug回调
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objType, uint64_t obj,
-                                                        size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userData)
+        size_t location, int32_t code, const char* layerPrefix, const char* msg, void* userData)
     {
         std::cerr << "validation layer: " << msg << std::endl;
 
