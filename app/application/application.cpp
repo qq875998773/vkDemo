@@ -226,7 +226,7 @@ namespace Engine
 
             m_renderer->run(delta_time);
 
-            debugWindow();
+            //debugWindow();
         }
     }
 }

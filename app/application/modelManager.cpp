@@ -143,7 +143,7 @@ namespace Engine
                     VV_ALERT("Model does not have normals.");
                 }
                 // UVs ÎÆÀíÌùÍ¼¼¯ºÏ
-                if (!attrib.texcoords.empty() && index.texcoord_index>-1)
+                if (!attrib.texcoords.empty() && index.texcoord_index != -1)
                     vertex.texCoord = glm::vec2(
                         attrib.texcoords[2 * index.texcoord_index + 0],
                         1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
@@ -151,8 +151,9 @@ namespace Engine
                 else
                 {
                     vertex.texCoord = glm::vec2(0.0f, 0.0f);
-                    VV_ALERT("Model does not have UV coordinates.");
+                    //VV_ALERT("Model does not have UV coordinates.");
                 }
+
                 if (vertex_map.count(vertex) == 0)
                 {
                     vertex_map[vertex] = (int)vertices.size();

@@ -33,8 +33,6 @@
 #include <unordered_map>
 #include "vulkan/vulkan.hpp" // 面向对象调用方式
 
-#include "oldMaterial.hpp"
-
 
 const int WIDTH = 1280; // 窗体宽
 const int HEIGHT = 720; // 窗体高
