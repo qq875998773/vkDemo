@@ -11,6 +11,7 @@ namespace Engine
     {
     }
 
+    // 创建buffer
     void VulkanBuffer::create(VulkanDevice* device, VkBufferUsageFlags usage_flags, VkDeviceSize size)
     {
         VV_ASSERT(device != VK_NULL_HANDLE, "VulkanDevice not present");
@@ -18,11 +19,11 @@ namespace Engine
         m_usage_flags = usage_flags;
         this->size = size;
 
-        // Create temporary transfer buffer on CPU 
+        // 在CPU上创建临时传输缓冲区
         allocateMemory(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_staging_buffer, m_staging_memory);
 
-        // Create storage buffer for GPU
+        // 为GPU创建存储缓冲区
         allocateMemory(size, usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, m_buffer_memory);
     }
 
@@ -43,15 +44,17 @@ namespace Engine
         transferToDevice();
     }
 
+    // 更新buffer
     void VulkanBuffer::update(void* data)
     {
-        // Move raw data to staging Vulkan buffer.
+        // 将原始数据转移到暂存的Vulkan缓冲区
         void* mapped_data;
         vkMapMemory(m_device->logical_device, m_staging_memory, 0, size, 0, &mapped_data);
         memcpy(mapped_data, data, size);
         vkUnmapMemory(m_device->logical_device, m_staging_memory);
     }
 
+    // 转移设备
     void VulkanBuffer::transferToDevice()
     {
         VV_ASSERT(m_staging_buffer && buffer, "Buffers not allocated correctly. Perhaps create() wasn't called.");
@@ -59,7 +62,7 @@ namespace Engine
         bool use_transfer = false;
         auto command_pool_used = m_device->command_pools["graphics"];
 
-        // use transfer queue if available
+        // 如果可用,使用传输队列
         if (m_device->command_pools.count("transfer") > 0)
         {
             command_pool_used = m_device->command_pools["transfer"];
@@ -81,14 +84,14 @@ namespace Engine
     // 分配内存
     void VulkanBuffer::allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory)
     {
-        // Create the Vulkan abstraction for a vertex buffer.
+        // 创建顶点缓冲区初始化
         VkBufferCreateInfo buffer_create_info = {};
         buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        buffer_create_info.flags = 0; // can be used to specify this stores sparse data
+        buffer_create_info.flags = 0; // 可以用来指定这个存储稀疏数据
         buffer_create_info.size = size;
-        buffer_create_info.usage = usage; // use this as a vertex/index buffer
+        buffer_create_info.usage = usage; // 作为顶点/索引缓冲区
 
-        // use transfer queue if available
+        // 如果可用，使用传输队列
         if (m_device->transfer_family_index != -1)
         {
             buffer_create_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -109,12 +112,12 @@ namespace Engine
 
         VV_CHECK_SUCCESS(vkCreateBuffer(m_device->logical_device, &buffer_create_info, nullptr, &buffer));
 
-        // Determine requirements for memory (where it's allocated, type of memory, etc.)
+        // 如果可用，请使用传输队列来确定内存需求(它在何处分配，内存类型等)
         VkMemoryRequirements memory_requirements = {};
         vkGetBufferMemoryRequirements(m_device->logical_device, buffer, &memory_requirements);
         auto memory_type = m_device->findMemoryTypeIndex(memory_requirements.memoryTypeBits, memory_properties);
 
-        // Allocate and bind buffer memory.
+        // 分配和绑定缓冲区内存
         VkMemoryAllocateInfo memory_allocate_info = {};
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memory_allocate_info.allocationSize = memory_requirements.size;

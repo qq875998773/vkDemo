@@ -19,28 +19,25 @@ namespace Engine
         ~VulkanBuffer();
 
         /*
-         * Creates two VkBuffers. One as a transfer buffer located on CPU memory and one as a storage buffer on GPU memory.
-         * Use along with update() and transferToDevice().
+         * 创建两个VkBuffers.一个是位于CPU内存上的传输缓冲区,另一个是位于GPU内存上的存储缓冲区.
+         * 与update()和transferToDevice()一起使用.
          */
         void create(VulkanDevice* device, VkBufferUsageFlags usage_flags, VkDeviceSize size);
 
-        /*
-         *
-         */
         void shutDown();
 
         /*
-         * Helper function to perform an update and transfer in a single step.
+         * Helper函数,可以在单个步骤中执行更新和传输
          */
         void updateAndTransfer(void* data);
 
         /*
-         * Updates the staging buffer with new raw data.
+         * 更新缓冲区数据
          */
         void update(void* data);
 
         /*
-         * Copies a buffer allocated on CPU memory to one allocated on GPU memory.
+         * 将分配在CPU内存上的缓冲区复制到分配在GPU内存上的缓冲
          */
         void transferToDevice();
 
@@ -52,9 +49,8 @@ namespace Engine
         VkBufferUsageFlags m_usage_flags;
 
         /*
-         * Creates the Vulkan abstraction for a data buffer with the given specifications.
+         * 使用给定的参数为数据缓冲区分配内存
          */
-        // 分配内存
         void allocateMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags memory_properties, VkBuffer& buffer, VkDeviceMemory& buffer_memory);
     };
 }

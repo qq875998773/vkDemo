@@ -20,7 +20,6 @@ namespace Engine
         // 初始化所有部件
         void create(int argc, char** argv);
 
-        void imguiinit();
         void debugWindow();
 
         // 清除分配的资源
