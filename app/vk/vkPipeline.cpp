@@ -48,7 +48,7 @@ namespace Engine
         graphics_pipeline_create_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         graphics_pipeline_create_info.flags = 0;
         graphics_pipeline_create_info.stageCount = m_shader_state_create_info.size();
-        graphics_pipeline_create_info.pStages = m_shader_state_create_info.data();
+        graphics_pipeline_create_info.pStages = m_shader_state_create_info.data(); // shader spv集合
         graphics_pipeline_create_info.pVertexInputState = &m_vertex_input_state_create_info;
         graphics_pipeline_create_info.pInputAssemblyState = &m_input_assembly_state_create_info;
         graphics_pipeline_create_info.pViewportState = &m_viewport_state_create_info;
@@ -81,7 +81,7 @@ namespace Engine
         VV_CHECK_SUCCESS(vkCreateComputePipelines(m_device->logical_device, VK_NULL_HANDLE, 1, &compute_pipeline_create_info, nullptr, &pipeline));
     }
 
-    // 添加shader阶段
+    // 添加shader
     bool VulkanPipeline::addShaderStage(VulkanShaderModule& shader_module)
     {
         VkPipelineShaderStageCreateInfo shader_create_info = {};

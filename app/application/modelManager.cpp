@@ -167,85 +167,6 @@ namespace Engine
             meshes.push_back(mesh);
         }
 
-        //// Enumerate all shapes in the scene
-        //for (int s = 0; s < (int)tiny_shapes.size(); ++s)
-        //{
-        //    std::vector<Vertex> vertices;
-        //    std::unordered_map<Vertex, int> vertex_map;
-        //    const auto& shape = tiny_shapes[s];
-        //    // Find all materials used by this shape.
-        //    std::set<int> used_materials(std::begin(shape.mesh.material_ids), std::end(shape.mesh.material_ids));
-        //    // Split the mesh into multiple meshes, each with only one material.
-        //    for (int used_material : used_materials)
-        //    {
-        //        // Map from old index to new index.
-        //        std::map<unsigned int, unsigned int> used_indices;
-        //        std::vector<uint32_t> indices;
-        //        // Collected vertex/normal/texcoord data.
-        //        //std::vector<float> vertices, normals, texcoords;
-        //        // Go through each face in the mesh.
-        //        for (size_t i = 0; i < shape.mesh.material_ids.size(); ++i)
-        //        {
-        //            // Skip faces which don't use the current material.
-        //            if (shape.mesh.material_ids[i] != used_material) continue;
-        //            const int num_face_vertices = shape.mesh.num_face_vertices[i];
-        //            assert(num_face_vertices == 3 && "expected triangles");
-        //            // For each vertex index of this face.
-        //            for (int j = 0; j < num_face_vertices; ++j)
-        //            {
-        //                const tinyobj::index_t old_index = shape.mesh.indices[num_face_vertices * i + j];
-        //                // Collect vertex/normal/texcoord data. Avoid inserting the same data twice.
-        //                auto result = used_indices.emplace(num_face_vertices * i + j, (unsigned int)(vertices.size() / 3));
-        //                if (result.second) // Did insert?
-        //                {
-        //                    Vertex vertex = {};
-        //                    // 顶点集合
-        //                    vertex.position = glm::vec3(
-        //                        attrib.vertices[(uint64_t)3 * old_index.vertex_index + 0],
-        //                        attrib.vertices[(uint64_t)3 * old_index.vertex_index + 1],
-        //                        attrib.vertices[(uint64_t)3 * old_index.vertex_index + 2]
-        //                    );
-        //                    // 法线集合
-        //                    if (!attrib.normals.empty())
-        //                        vertex.normal = glm::vec3(
-        //                            attrib.vertices[(uint64_t)3 * old_index.normal_index + 0],
-        //                            attrib.vertices[(uint64_t)3 * old_index.normal_index + 1],
-        //                            attrib.vertices[(uint64_t)3 * old_index.normal_index + 2]
-        //                        );
-        //                    else
-        //                    {
-        //                        vertex.normal = glm::vec3(0.0, 0.0, 1.0);
-        //                        VV_ALERT("Model does not have normals.");
-        //                    }
-        //                    // UVs 纹理贴图集合
-        //                    if (!attrib.texcoords.empty())
-        //                        vertex.texCoord = glm::vec2(
-        //                            attrib.texcoords[(uint64_t)2 * old_index.texcoord_index + 0],
-        //                            1.0f - attrib.texcoords[(uint64_t)2 * old_index.texcoord_index + 1]
-        //                        );
-        //                    else
-        //                    {
-        //                        vertex.texCoord = glm::vec2(0.0f, 0.0f);
-        //                        VV_ALERT("Model does not have UV coordinates.");
-        //                    }
-        //                    if (vertex_map.count(vertex) == 0)
-        //                    {
-        //                        vertex_map[vertex] = (int)vertices.size();
-        //                        vertices.push_back(vertex);
-        //                    }
-        //                    indices.push_back(vertex_map[vertex]);
-        //                    
-        //                }
-        //                int curr_material_id = shape.mesh.material_ids[0];
-        //                Mesh* mesh = new Mesh();
-        //                mesh->create(m_device, shape.name, vertices, indices, ((curr_material_id < 0) ? 0 : curr_material_id));
-        //                meshes.push_back(mesh);
-        //            }
-        //        }
-        //      
-        //    }
-        //}
-
         m_loaded_meshes[path + name] = meshes;
 
         if (material_template)
@@ -308,7 +229,7 @@ namespace Engine
                 materials.push_back(material);
             }
 
-            // if no mtl file was found
+            // 如果没有找到mtl文件
             if (tiny_materials.empty())
             {
                 Material* material = new Material();

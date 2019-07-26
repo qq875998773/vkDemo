@@ -16,11 +16,32 @@ namespace Engine
         return output;
     }
 
+    // 读取spv文件
+    static std::vector<char> readFile(const std::string& filename)
+    {
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("failed to open file!");
+        }
+
+        size_t fileSize = (size_t)file.tellg();
+        std::vector<char> buffer(fileSize);
+
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+
+        file.close();
+
+        return buffer;
+    }
+
 
     void VulkanShaderModule::create(VulkanDevice* device, std::string name, std::string stage, std::string entrance_function)
     {
         m_device = device;
-        m_filename = name;
+        m_filename = name; // shader名字
         this->entrance_function = entrance_function;
 
         if (stage == "vert")
@@ -36,11 +57,12 @@ namespace Engine
         else if (stage == "glsl")
             shader_stage = VK_SHADER_STAGE_ALL_GRAPHICS; // todo: dont know what to put here
 
-        std::string dir = Settings::inst()->getShaderDirectory();
+         std::string dir = Settings::inst()->getShaderDirectory();
 
-        m_filepath = dir + name + "_" + stage + ".spv";
-        m_binary_data = loadSpirVBinary(m_filepath);
+         m_filepath = dir + name + "_" + stage + ".spv";
+         m_binary_data = loadSpirVBinary(m_filepath);
 
+         // cc 2019-7-26
         if (stage == "frag")
             reflectDescriptorTypes(convert(m_binary_data), VK_SHADER_STAGE_FRAGMENT_BIT);
 
@@ -60,7 +82,7 @@ namespace Engine
             vkDestroyShaderModule(m_device->logical_device, shader_module, nullptr);
     }
 
-
+    // 加载spv
     std::vector<char> VulkanShaderModule::loadSpirVBinary(std::string file_name)
     {
         std::ifstream file(file_name, std::ios::ate | std::ios::binary);
@@ -76,7 +98,6 @@ namespace Engine
         file.close();
         return buffer;
     }
-
 
     void VulkanShaderModule::reflectDescriptorTypes(std::vector<uint32_t> spirv_binary, VkShaderStageFlagBits shader_stage)
     {

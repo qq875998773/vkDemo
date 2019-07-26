@@ -1,5 +1,0 @@
-phong
-dummy
-skybox
-triangle
-PBR_IBL

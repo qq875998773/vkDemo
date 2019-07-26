@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     //gun->translate(glm::vec3(1.0f, 0.0f, 0.0f));
 
     // ºûµû
-    Model* gun = scene->addModel("hudie/", "hudie.obj", "phong");
+    Model* gun = scene->addModel("hudie/", "hudie.obj", "triangle");
     gun->translate(glm::vec3(1.0f, 0.0f, 0.0f));
 
     // Ç¹

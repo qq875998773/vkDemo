@@ -233,25 +233,21 @@ namespace Engine
         }
     }
 
-    // 创建材质模板集
+    // 加载所有可能需要用到的shader
     void Scene::createMaterialTemplates()
     {
-        std::string shader_file = Settings::inst()->getShaderDirectory() + "shader_info.txt";
-        std::ifstream file(shader_file);
+        // 所有可能用到的sheder
+        std::vector<std::string> shader_names = { "phong","dummy","skybox","triangle","PBR_IBL"/*,"cc_test"*/};
 
-        VV_ASSERT(file.is_open(), "Failed to open shader_info.txt. Was it moved or renamed?");
-
-        // todo: shouldn't use this file parsing anymore. should just hardcode shader construction
-        // loop through required shaders in info file and initialize them.
-        std::string curr_shader_name;
-        while (std::getline(file, curr_shader_name))
+        for (int i = 0; i < shader_names.size(); ++i)
         {
+            std::string curr_shader_name = shader_names[i];
             MaterialTemplate material_template;
-            material_template.name = curr_shader_name; // note: apply name to template based on name assigned to spriv shader
+            material_template.name = curr_shader_name; // note: 根据分配给spriv着色器的名称将名称应用到模板
 
-            // Construct shader
+            // 结构材质
 
-            // todo: this removes all generality of this function. should place somewhere else.
+            // todo: 这样就去掉了这个函数的所有一般性.应该放在别的地方.
             material_template.shader_modules.emplace_back();
             material_template.shader_modules[0].create(m_device, material_template.name, "vert", "main");
             material_template.shader_modules[0].entrance_function = "main";
@@ -262,7 +258,7 @@ namespace Engine
 
             material_template.uses_environment_lighting = material_template.shader_modules[1].uses_environmental_lighting;
 
-            // Construct Descriptor Set Layouts
+            // 构造描述符集布局
             std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
             descriptor_set_layouts.push_back(m_scene_descriptor_set_layout);
 
@@ -272,19 +268,19 @@ namespace Engine
             {
                 std::vector<VkDescriptorSetLayoutBinding> temp_bindings_buffer;
 
-                // material descriptor layout
+                // 材料描述符的布局
                 for (auto& o : material_template.shader_modules[1].material_descriptor_orderings)
                     temp_bindings_buffer.push_back(createDescriptorSetLayoutBinding(o.binding, o.type, 1, o.shader_stage));
 
                 createVulkanDescriptorSetLayout(m_device->logical_device, temp_bindings_buffer, material_template.material_descriptor_set_layout);
                 descriptor_set_layouts.push_back(material_template.material_descriptor_set_layout);
 
-                // environment descriptor set layout
+                // 环境描述符集布局
                 if (material_template.uses_environment_lighting)
                     descriptor_set_layouts.push_back(m_environment_descriptor_set_layout);
             }
 
-            // Construct Pipeline
+            // 构建管线
             VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
             pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
             pipeline_layout_create_info.flags = 0;
@@ -317,9 +313,6 @@ namespace Engine
             // Finished
             material_templates[material_template.name] = material_template;
         }
-
-        // todo: bind all created pipelines at once to be more efficient.
-        file.close();
     }
 
     // 创建描述符池
