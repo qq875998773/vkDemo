@@ -20,8 +20,6 @@ namespace Engine
         // 初始化所有部件
         void create(int argc, char** argv);
 
-        void debugWindow();
-
         // 清除分配的资源
         // 必须在执行结束时调用,以确保成功清除所有分配的资源
         void shutDown();
@@ -33,9 +31,6 @@ namespace Engine
          * Signals the Vulkan engine to construct render commands and begins all central processing.
          */
         void beginMainLoop();
-
-        float getWindowWidth();
-        float getWindowHeight();
 
     private:
         int m_argc;

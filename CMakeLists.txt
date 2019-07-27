@@ -13,8 +13,6 @@ find_package(Vulkan REQUIRED) # vulkanÒÀÀµ ÒòÎªÏµÍ³°²×°ÁËvulkanËùÒÔ²»ĞèÒª°ÑÎÄ¼ş·
 
 find_package(GLFW3 REQUIRED) # ÕÒµ½glfw3ÒÀÀµ ÒòÎªglfw3°üº¬ÓĞlib ËùÒÔĞèÒªÌí¼ÓÒÀÀµ
 
-find_package(GLEW REQUIRED) # ÕÒµ½glewÒÀÀµ¿â
-
 # Include sub-projects.
 add_subdirectory("shaders")
 add_subdirectory("resources")
