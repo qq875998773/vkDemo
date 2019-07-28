@@ -5,6 +5,10 @@
 #include "settings.h"
 #include "vkUtils.hpp"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+
 namespace Engine
 {
     // 创建窗体
@@ -24,6 +28,9 @@ namespace Engine
         glfwSetCursorPosCallback(window, cursorPositionCallback);
         glfwSetMouseButtonCallback(window, mousebuttonCallback);
         glfwSetScrollCallback(window, scrollCallback);
+
+        /*ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForVulkan(window, true);*/
     }
 
  
@@ -49,6 +56,14 @@ namespace Engine
     // 运行
     void GLFWWindow::run()
     {
+       /* ImGui_ImplGlfw_NewFrame();
+
+        static const ImVec2 win_size(380, 580);
+        ImGui::SetNextWindowSizeConstraints(win_size, win_size);
+        ImGui::Begin("Global settings");
+        ImGui::End();
+        ImGui::Render();*/
+
         glfwPollEvents();
     }
 

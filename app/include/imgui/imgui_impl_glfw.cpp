@@ -136,6 +136,12 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
     io.BackendPlatformName = "imgui_impl_glfw";
 
+    // Create font texture
+    unsigned char* fontData;
+    int texWidth, texHeight;
+    io.Fonts->AddFontFromFileTTF("./../data/Roboto-Medium.ttf", 16.0f);
+    io.Fonts->GetTexDataAsRGBA32(&fontData, &texWidth, &texHeight);
+
     // Keyboard mapping. ImGui will use those indices to peek into the io.KeysDown[] array.
     io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
     io.KeyMap[ImGuiKey_LeftArrow] = GLFW_KEY_LEFT;
@@ -308,7 +314,7 @@ static void ImGui_ImplGlfw_UpdateGamepads()
 void ImGui_ImplGlfw_NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
-    //IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
+    IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
 
     // Setup display size (every frame to accommodate for window resizing)
     int w, h;
@@ -329,4 +335,7 @@ void ImGui_ImplGlfw_NewFrame()
 
     // Update game controllers (if enabled and available)
     ImGui_ImplGlfw_UpdateGamepads();
+
+    // Start the frame
+    ImGui::NewFrame();
 }

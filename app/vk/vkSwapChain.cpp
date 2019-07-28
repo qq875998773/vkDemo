@@ -76,7 +76,8 @@ namespace Engine
             shutDown(device);
 
         //vkPreCallValidateCreateSwapchainKHR(); // todo: this used to be required, but doesn't seem to be defined anymore
-        VV_CHECK_SUCCESS(vkCreateSwapchainKHR(device->logical_device, &swap_chain_create_info, nullptr, &swap_chain));
+        //VV_CHECK_SUCCESS(vkCreateSwapchainKHR(device->logical_device, &swap_chain_create_info, nullptr, &swap_chain));
+        vkCreateSwapchainKHR(device->logical_device, &swap_chain_create_info, nullptr, &swap_chain);
         createVulkanImageViews(device);
     }
 
