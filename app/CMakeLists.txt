@@ -81,9 +81,7 @@ set(PROJECT_VULKAN_SOURCES vk/vkBuffer.cpp
                            vk/vkShaderModule.h
                            vk/vkSwapChain.cpp
                            vk/vkSwapChain.h
-                           vk/vkUtils.hpp
-						   vk/VulkanUIOverlay.cpp
-						   vk/VulkanUIOverlay.h)
+                           vk/vkUtils.hpp)
 
 set(PROJECT_SOURCES main.cpp)
 
