@@ -11,7 +11,9 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake") # 追加cmake目录
 
 find_package(Vulkan REQUIRED) # vulkan依赖 因为系统安装了vulkan所以不需要把文件放到项目目录
 
-find_package(GLFW3 REQUIRED) # 找到glfw3依赖 因为glfw3包含有lib 所以需要添加依赖
+find_package(GLFW3 REQUIRED)  # 找到glfw3依赖 因为glfw3包含有lib 所以需要添加依赖
+
+find_package(Assimp REQUIRED) # 附加Assimp库
 
 # Include sub-projects.
 add_subdirectory("shaders")

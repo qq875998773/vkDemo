@@ -18,6 +18,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 
+#include "vkUIOverlay.h"
+
 namespace Engine
 {
     // 创建程序初始化

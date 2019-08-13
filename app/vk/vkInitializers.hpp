@@ -5,12 +5,10 @@
 
 namespace Engine
 {
-    /*
-     * vulkan结构初始化
-     */
+    // vulkan结构初始化
     namespace initializers
     {
-
+        // 内存分配初始化
         inline VkMemoryAllocateInfo memoryAllocateInfo()
         {
             VkMemoryAllocateInfo memAllocInfo{};
@@ -18,6 +16,7 @@ namespace Engine
             return memAllocInfo;
         }
 
+        // 
         inline VkMappedMemoryRange mappedMemoryRange()
         {
             VkMappedMemoryRange mappedMemoryRange{};

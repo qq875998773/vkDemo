@@ -26,7 +26,8 @@ namespace Engine
         // 为GPU创建存储缓冲区
         allocateMemory(size, usage_flags | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, m_buffer_memory);
     }
-
+    
+    // 销毁资源
     void VulkanBuffer::shutDown()
     {
         if (m_staging_buffer)
@@ -38,6 +39,7 @@ namespace Engine
         vkFreeMemory(m_device->logical_device, m_buffer_memory, nullptr);
     }
 
+    // 更新和转移
     void VulkanBuffer::updateAndTransfer(void* data)
     {
         update(data);
@@ -125,5 +127,93 @@ namespace Engine
 
         VV_CHECK_SUCCESS(vkAllocateMemory(m_device->logical_device, &memory_allocate_info, nullptr, &buffer_memory));
         vkBindBufferMemory(m_device->logical_device, buffer, buffer_memory, 0);
+    }
+
+    /**
+    * Release all Vulkan resources held by this buffer
+    */
+    void VulkanBuffer::destroy()
+    {
+        if (buffer)
+        {
+            vkDestroyBuffer(m_device->logical_device, buffer, nullptr);
+        }
+        if (m_staging_memory)
+        {
+            vkFreeMemory(m_device->logical_device, m_staging_memory, nullptr);
+        }
+    }
+
+    /**
+    * Map a memory range of this buffer. If successful, mapped points to the specified buffer range.
+    *
+    * @param size (Optional) Size of the memory range to map. Pass VK_WHOLE_SIZE to map the complete buffer range.
+    * @param offset (Optional) Byte offset from beginning
+    *
+    * @return VkResult of the buffer mapping call
+    */
+    VkResult VulkanBuffer::map(VkDeviceSize size, VkDeviceSize offset)
+    {
+        return vkMapMemory(m_device->logical_device, m_staging_memory, offset, size, 0, &mapped);
+    }
+
+    /**
+    * Unmap a mapped memory range
+    *
+    * @note Does not return a result as vkUnmapMemory can't fail
+    */
+    void VulkanBuffer::unmap()
+    {
+        if (mapped)
+        {
+            vkUnmapMemory(m_device->logical_device, m_staging_memory);
+            mapped = nullptr;
+        }
+    }
+
+    /**
+    * Flush a memory range of the buffer to make it visible to the device
+    *
+    * @note Only required for non-coherent memory
+    *
+    * @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the complete buffer range.
+    * @param offset (Optional) Byte offset from beginning
+    *
+    * @return VkResult of the flush call
+    */
+    VkResult VulkanBuffer::flush(VkDeviceSize size, VkDeviceSize offset)
+    {
+        VkMappedMemoryRange mappedRange = {};
+        mappedRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        mappedRange.memory = m_staging_memory;
+        mappedRange.offset = offset;
+        mappedRange.size = size;
+        return vkFlushMappedMemoryRanges(m_device->logical_device, 1, &mappedRange);
+    }
+
+    /**
+    * Setup the default descriptor for this buffer
+    *
+    * @param size (Optional) Size of the memory range of the descriptor
+    * @param offset (Optional) Byte offset from beginning
+    *
+    */
+    void VulkanBuffer::setupDescriptor(VkDeviceSize size, VkDeviceSize offset)
+    {
+        descriptor.offset = offset;
+        descriptor.buffer = buffer;
+        descriptor.range = size;
+    }
+
+    /**
+    * Attach the allocated memory block to the buffer
+    *
+    * @param offset (Optional) Byte offset (from the beginning) for the memory region to bind
+    *
+    * @return VkResult of the bindBufferMemory call
+    */
+    VkResult VulkanBuffer::bind(VkDeviceSize offset)
+    {
+        return vkBindBufferMemory(m_device->logical_device, buffer, m_staging_memory, offset);
     }
 }
