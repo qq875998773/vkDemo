@@ -1,13 +1,12 @@
 set(ASSIMP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/assimp")
 
-file(GLOB INCLUDES ${ASSIMP_DIR}/include/*.h
-                   ${ASSIMP_DIR}/include/*.hpp
-				   ${ASSIMP_DIR}/include/*.inl
-				   ${ASSIMP_DIR}/include/Compiler/*.h
-				   ${ASSIMP_DIR}/include/AndroidJNI/*.h)
+file(GLOB ASSIMP_INCLUDE_DIR ${ASSIMP_DIR}/include/*.h
+                             ${ASSIMP_DIR}/include/*.hpp
+				             ${ASSIMP_DIR}/include/*.inl
+				             ${ASSIMP_DIR}/include/Compiler/*.h
+				             ${ASSIMP_DIR}/include/AndroidJNI/*.h)
 
 find_library(ASSIMP_LIB NAMES assimp PATHS "${ASSIMP_DIR}/lib")
-find_path(ASSIMP_INCLUDE_DIR NAMES INCLUDES PATHS "${ASSIMP_DIR}/include")
 
 find_package_handle_standard_args(ASSIMP DEFAULT_MSG ASSIMP_LIB ASSIMP_INCLUDE_DIR)
 

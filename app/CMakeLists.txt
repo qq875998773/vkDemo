@@ -32,59 +32,58 @@ include_directories("vk/"
 #                          "${SHADER_DIR}/shader_info.txt")
 
 
-set(PROJECT_HEADERS application/camera.cpp
-                    application/camera.h
-                    application/deferredRenderer.cpp
-                    application/deferredRenderer.h
-                    application/entity.cpp
-                    application/entity.h
-                    application/glfwWindow.cpp
-                    application/glfwWindow.h
-                    application/inputManager.cpp
-                    application/inputManager.h
-                    application/light.cpp
-                    application/light.h
-                    application/material.cpp
-                    application/material.h
-                    application/mesh.cpp
-                    application/mesh.h
-                    application/model.cpp
-                    application/model.h
-                    application/modelManager.cpp
-                    application/modelManager.h
-                    application/scene.cpp
-                    application/scene.h
-                    application/settings.cpp
-                    application/settings.h
-                    application/skyBox.cpp
-                    application/skyBox.h
-                    application/textureManager.cpp
-                    application/textureManager.h
-                    application/application.cpp
-                    application/application.h)
+#set(PROJECT_HEADERS application/camera.cpp
+#                   application/camera.h
+#                   application/deferredRenderer.cpp
+#                   application/deferredRenderer.h
+#                   application/entity.cpp
+#                   application/entity.h
+#                   application/glfwWindow.cpp
+#                   application/glfwWindow.h
+#                   application/inputManager.cpp
+#                   application/inputManager.h
+#                   application/light.cpp
+#                   application/light.h
+#                   application/material.cpp
+#                   application/material.h
+#                   application/mesh.cpp
+#                   application/mesh.h
+#                   application/model.cpp
+#                   application/model.h
+#                   application/modelManager.cpp
+#                   application/modelManager.h
+#                   application/scene.cpp
+#                   application/scene.h
+#                   application/settings.cpp
+#                   application/settings.h
+#                   application/skyBox.cpp
+#                   application/skyBox.h
+#                   application/textureManager.cpp
+#                   application/textureManager.h
+#                   application/application.cpp
+#                   application/application.h)
 
-set(PROJECT_VULKAN_SOURCES vk/vkBuffer.cpp
-                           vk/vkBuffer.h
-                           vk/vkDevice.cpp
-                           vk/vkDevice.h
-                           vk/vkImage.cpp
-                           vk/vkImage.h
-                           vk/vkImageView.cpp
-                           vk/vkImageView.h
-                           vk/vkPipeline.cpp
-                           vk/vkPipeline.h
-                           vk/vkRenderPass.cpp
-                           vk/vkRenderPass.h
-                           vk/vkSampler.cpp
-                           vk/vkSampler.h
-                           vk/vkShaderModule.cpp
-                           vk/vkShaderModule.h
-                           vk/vkSwapChain.cpp
-                           vk/vkSwapChain.h
-                           vk/vkUtils.hpp
-						   vk/vkInitializers.hpp
-						   vk/vkUIOverlay.h
-						   vk/vkUIOverlay.cpp)
+set(PROJECT_VULKAN_SOURCES vk/benchmark.hpp
+                           vk/camera.hpp
+                           vk/frustum.hpp
+                           vk/keycodes.hpp
+                           vk/threadpool.hpp
+                           vk/VulkanBuffer.hpp
+                           vk/VulkanDebug.cpp
+                           vk/VulkanDebug.h
+                           vk/VulkanDevice.hpp
+                           vk/vulkanexamplebase.cpp
+                           vk/vulkanexamplebase.h
+                           vk/VulkanFrameBuffer.hpp
+                           vk/VulkanHeightmap.hpp
+                           vk/VulkanInitializers.hpp
+                           vk/VulkanModel.hpp
+                           vk/VulkanSwapChain.hpp
+                           vk/VulkanTexture.hpp
+                           vk/VulkanTools.cpp
+                           vk/VulkanTools.h
+						   vk/VulkanUIOverlay.cpp
+						   vk/VulkanUIOverlay.h)
 
 set(PROJECT_SOURCES main.cpp)
 
@@ -106,14 +105,9 @@ set(IMGUI_SORUCES
     include/imgui/imgui_demo.cpp
     include/imgui/imgui_draw.cpp
     include/imgui/imgui_internal.h
-    include/imgui/imgui_widgets.cpp
-    include/imgui/imstb_rectpack.h
-	include/imgui/imstb_textedit.h
-	include/imgui/imstb_truetype.h
-	include/imgui/imgui_impl_glfw.cpp
-	include/imgui/imgui_impl_glfw.h
-	include/imgui/imgui_impl_vulkan.h
-	include/imgui/imgui_impl_vulkan.cpp)
+    include/imgui/stb_rect_pack.h
+    include/imgui/stb_textedit.h
+	include/imgui/stb_truetype.h)
 
 
 # Vulkan shaders need compiling prior to running
@@ -131,7 +125,7 @@ set(IMGUI_SORUCES
 #    endforeach(SHADER_FILE)
 #endif()
 
-source_group("application" FILES ${PROJECT_HEADERS})
+#source_group("application" FILES ${PROJECT_HEADERS})
 source_group("shaders" FILES ${PROJECT_SHADERS})
 source_group("app" FILES ${PROJECT_SOURCES})
 source_group("app\\vk" FILES ${PROJECT_VULKAN_SOURCES})
@@ -141,7 +135,7 @@ add_definitions(-DGLFW_INCLUDE_NONE -DPROJECT_SOURCE_DIR=\"${PROJECT_SOURCE_DIR}
 
 add_executable(vkTest  ${PROJECT_SOURCES}
                        ${PROJECT_VULKAN_SOURCES}
-                       ${PROJECT_HEADERS}
+                       #${PROJECT_HEADERS}
                        ${PROJECT_SHADERS}
 					   ${IMGUI_SORUCES})
 
@@ -149,7 +143,7 @@ add_executable(oldmain oldmain.cpp)
 
 target_include_directories(vkTest PUBLIC "include")
 target_include_directories(vkTest PUBLIC "application")
-target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3)
+target_link_libraries(vkTest Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-cpp  glfw3::glfw3 assimp::assimp)
 
 target_include_directories(oldmain PUBLIC "include")
 target_link_libraries(oldmain Vulkan::Vulkan glfw3::glfw3)
