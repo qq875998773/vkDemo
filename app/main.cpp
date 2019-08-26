@@ -35,8 +35,8 @@ public:
     // Vertex buffer and attributes
     struct
     {
-        VkDeviceMemory memory;															// Handle to the device memory for this buffer
-        VkBuffer buffer;																// Handle to the Vulkan buffer object that the memory is bound to
+        VkDeviceMemory memory;	// Handle to the device memory for this buffer
+        VkBuffer buffer;		// Handle to the Vulkan buffer object that the memory is bound to
     } vertices;
 
     // Index buffer
@@ -110,6 +110,8 @@ public:
         zoom = -2.5f;
         title = "Vulkan Example - Basic indexed triangle";
         // Values not set here are initialized in the base class constructor
+        timerSpeed *= 0.5f;
+        settings.overlay = true;
 
         // ≤‚ ‘UI
         /*title = "Test UI";
@@ -1062,7 +1064,7 @@ public:
     {
         VulkanExampleBase::prepare();
         prepareSynchronizationPrimitives();
-        prepareVertices(USE_STAGING);
+        prepareVertices(USE_STAGING); 
         prepareUniformBuffers();
         setupDescriptorSetLayout();
         preparePipelines();
@@ -1071,6 +1073,7 @@ public:
         buildCommandBuffers();
         prepared = true;
     }
+
 
     virtual void render()
     {
